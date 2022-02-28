@@ -13,6 +13,7 @@ const { Contract } = require('fabric-contract-api');
 const ClientIdentity = require('fabric-shim').ClientIdentity;
 const stringify = require('json-stringify-deterministic');
 const sortKeysRecursive = require('sort-keys-recursive');
+const X509Certificate = require("crypto").X509Certificate;
 
 // Create contract
 class IPFSContract extends Contract {
@@ -29,7 +30,7 @@ class IPFSContract extends Contract {
   async beforeTransaction(ctx) {
     this.clientId = new ClientIdentity(ctx.stub);
     this.clientMSPId = this.clientId.getMSPID();
-    this.clientCert = this.clientId.getID();
+    this.clientCert = new X509Certificate(this.clientId.getIDBytes());
   }
 
   // Verify if the network or data with the given ID exists in world state
@@ -42,11 +43,22 @@ class IPFSContract extends Contract {
    * !!! IPFS networks !!!
    */
 
+  // Verify if the user has the 'IPFS' attribute set in their certificate
+  async checkUserIPFS() {
+    if (!this.clientId.assertAttributeValue('ipfs', 'true')) {
+      // Make an exception for the admin
+      if (!this.clientCert.subject.includes('OU=admin')) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Add an IPFS network description
   async addNetwork(ctx, id, owner, bootstrapNodes, netKey, acl) {
     // Only admins can add IPFS network descriptions
-    if (!this.clientId.assertAttributeValue('OU', 'admin')) {
-      throw new Error(`Only admins can add IPFS network descriptions. You are: ${this.clientCert}`);
+    if (!this.clientCert.subject.includes('OU=admin')) {
+      throw new Error(`Only admins can add IPFS network descriptions.`);
     }
 
     // Verify existence
@@ -70,26 +82,46 @@ class IPFSContract extends Contract {
 
   // Get an IPFS network description
   async getNetwork(ctx, id) {
-    // Only ACL users and owner can get network info
+    // Verifiy if IPFS user
+    const userIPFS = await this.checkUserIPFS();
+    if(!userIPFS) {
+      throw new Error(`User is not enabled for IPFS usage (IPFS attribute is missing in certificate).`);
+    }
+
+    // Get current state
+    const networkAsBytes = await ctx.stub.getState(id);
 
     // Verify existence
-    const networkJSON = await ctx.stub.getState(id);
-    if (!networkJSON || networkJSON.length === 0) {
+    if (!networkAsBytes || networkAsBytes.length === 0) {
       throw new Error(`The IPFS network description with ID '${id}' does not exist`);
     }
 
-    return networkJSON.toString();
+    // Only ACL users and owner can get network info
+    const networkJSON = JSON.parse(networkAsBytes.toString());
+    console.log(`owner: ${networkJSON.Owner}`);
+    
+    return networkJSON;
   }
   
   // Delete an IPFS network description
   async delNetwork(ctx, id) {
-    // Only the owner can delete
+    // Verifiy if IPFS user
+    const userIPFS = await this.checkUserIPFS();
+    if(!userIPFS) {
+      throw new Error(`User is not enabled for IPFS usage (IPFS attribute is missing in certificate).`);
+    }
 
+    // Get current state
+    const networkAsBytes = await ctx.stub.getState(id);
+    
     // Verify existence
-    const exists = await this.checkElementExists(ctx, id);
-    if (!exists) {
+    if (!networkAsBytes || networkAsBytes.length === 0) {
       throw new Error(`The IPFS network description with ID '${id}' does not exist`);
     }
+
+    // Only the owner can delete
+    const networkJSON = JSON.parse(networkAsBytes.toString());
+    console.log(`owner: ${networkJSON.Owner}`);
 
     await ctx.stub.deleteState(id);
   }
@@ -100,12 +132,10 @@ class IPFSContract extends Contract {
 
   // Add a data description
   async addData(ctx, id, owner, networkId, cid, cryptKey, acl) {
-    // Verify if the user has the 'IPFS' attribute set in their certificate
-    if (!this.clientId.assertAttributeValue('ipfs', 'true')) {
-      // Make an exception for the admin
-      if (!this.clientId.assertAttributeValue('OU', 'admin')) {
-        throw new Error(`User is not enabled for IPFS usage (IPFS attribute is missing in certificate).`);
-      }
+    // Verifiy if IPFS user
+    const userIPFS = await this.checkUserIPFS();
+    if(!userIPFS) {
+      throw new Error(`User is not enabled for IPFS usage (IPFS attribute is missing in certificate).`);
     }
 
     // Verify existence
@@ -130,26 +160,46 @@ class IPFSContract extends Contract {
 
   // Get a data description
   async getData(ctx, id) {
-    // Only ACL users and owner can get data info
+    // Verifiy if IPFS user
+    const userIPFS = await this.checkUserIPFS();
+    if(!userIPFS) {
+      throw new Error(`User is not enabled for IPFS usage (IPFS attribute is missing in certificate).`);
+    }
+
+    // Get current state
+    const dataAsBytes = await ctx.stub.getState(id);
 
     // Verify existence
-    const dataJSON = await ctx.stub.getState(id);
-    if (!dataJSON || dataJSON.length === 0) {
+    if (!dataAsBytes || dataAsBytes.length === 0) {
       throw new Error(`The data description with ID '${id}' does not exist`);
     }
 
-    return dataJSON.toString();
+    // Only ACL users and owner can get data info
+    const dataJSON = JSON.parse(dataAsBytes.toString());
+    console.log(`owner: ${dataJSON.Owner}`);
+
+    return dataJSON;
   }
 
   // Delete a data description
   async delData(ctx, id) {
-    // Only the owner can delete
+    // Verifiy if IPFS user
+    const userIPFS = await this.checkUserIPFS();
+    if(!userIPFS) {
+      throw new Error(`User is not enabled for IPFS usage (IPFS attribute is missing in certificate).`);
+    }
+
+    // Get current state
+    const dataAsBytes = await ctx.stub.getState(id);
 
     // Verify existence
-    const exists = await this.checkElementExists(ctx, id);
-    if (!exists) {
+    if (!dataAsBytes || dataAsBytes.length === 0) {
       throw new Error(`The data description with ID '${id}' does not exist`);
     }
+
+    // Only the owner can delete
+    const dataJSON = JSON.parse(dataAsBytes.toString());
+    console.log(`owner: ${dataJSON.Owner}`);
 
     await ctx.stub.deleteState(id);
   }
