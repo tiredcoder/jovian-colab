@@ -1,0 +1,132 @@
+{
+  "$schema": "https://github.com/softwaremill/fablo/releases/download/1.0.0/schema.json",
+  "global": {
+    "fabricVersion": "2.4.1",
+    "tls": true,
+    "monitoring": {
+      "loglevel": "debug"
+    },
+    "tools": {
+      "explorer": true
+    }
+  },
+  "orgs": [
+    {
+      "organization": {
+        "name": "orgA",
+        "domain": "orga.fabric.localhost",
+        "mspName": "MSPorgA"
+      },
+      "peer": {
+        "instances": 2,
+        "db": "LevelDb"
+      },
+      "orderers": [
+        {
+          "groupName": "consortium",
+          "type": "raft",
+          "instances": 1
+        }
+      ]
+    },
+    {
+      "organization": {
+        "name": "orgB",
+        "domain": "orgb.fabric.localhost",
+        "mspName": "MSPorgB"
+      },
+      "peer": {
+        "instances": 2,
+        "db": "LevelDb"
+      },
+      "orderers": [
+        {
+          "groupName": "consortium",
+          "type": "raft",
+          "instances": 1
+        },
+        {
+          "groupName": "orgb",
+          "type": "raft",
+          "instances": 2
+        }
+      ]
+    },
+    {
+      "organization": {
+        "name": "orgC",
+        "domain": "orgc.fabric.localhost",
+        "mspName": "MSPorgC"
+      },
+      "peer": {
+        "instances": 2,
+        "db": "LevelDb"
+      },
+      "orderers": [
+        {
+          "groupName": "consortium",
+          "type": "raft",
+          "instances": 1
+        }
+      ]
+    }
+  ],
+  "channels": [
+    {
+      "name": "consortium-chain",
+      "ordererGroup": "consortium",
+      "orgs": [
+        {
+          "name": "orgA",
+          "peers": [
+            "peer0",
+            "peer1"
+          ]
+        },
+        {
+          "name": "orgB",
+          "peers": [
+            "peer0",
+            "peer1"
+          ]
+        },
+        {
+          "name": "orgC",
+          "peers": [
+            "peer0",
+            "peer1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "orgb-chain",
+      "ordererGroup": "orgb",
+      "orgs": [
+        {
+          "name": "orgB",
+          "peers": [
+            "peer0",
+            "peer1"
+          ]
+        }
+      ]
+    }
+  ],
+  "chaincodes": [
+    {
+      "name": "consortium-cc-ipfs",
+      "version": "0.0.1",
+      "lang": "node",
+      "channel": "consortium-chain",
+      "directory": "./chaincodes/cc-ipfs"
+    },
+    {
+      "name": "orgb-cc-ipfs",
+      "version": "0.0.1",
+      "lang": "node",
+      "channel": "orgb-chain",
+      "directory": "./chaincodes/cc-ipfs"
+    }
+  ]
+}

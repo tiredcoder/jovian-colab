@@ -1,0 +1,9 @@
+{
+  "network-configs": {
+    "network-orga": {
+      "name": "Network of orgA",
+      "profile": "/opt/explorer/app/platform/fabric/connection-profile/connection-profile-orga.json"
+    }
+  },
+  "license": "Apache-2.0"
+}

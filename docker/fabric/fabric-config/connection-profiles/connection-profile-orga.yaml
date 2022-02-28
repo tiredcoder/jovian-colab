@@ -1,0 +1,160 @@
+name: connection-profile-orga
+description: Connection profile for orgA
+version: 1.0.0
+client:
+  organization: orgA
+channels:
+  consortium-chain:
+    orderers:
+      - orderer0.consortium.orga.fabric.localhost
+      - orderer0.consortium.orgb.fabric.localhost
+      - orderer0.consortium.orgc.fabric.localhost
+    peers:
+      peer0.orga.fabric.localhost:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+      peer1.orga.fabric.localhost:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+      peer0.orgb.fabric.localhost:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+      peer1.orgb.fabric.localhost:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+      peer0.orgc.fabric.localhost:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+      peer1.orgc.fabric.localhost:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+        discover: true
+organizations:
+  orgA:
+    mspid: MSPorgA
+    peers:
+      - peer0.orga.fabric.localhost
+      - peer1.orga.fabric.localhost
+    certificateAuthorities:
+      - ca.orga.fabric.localhost
+  orgB:
+    mspid: MSPorgB
+    peers:
+      - peer0.orgb.fabric.localhost
+      - peer1.orgb.fabric.localhost
+    certificateAuthorities:
+      - ca.orgb.fabric.localhost
+  orgC:
+    mspid: MSPorgC
+    peers:
+      - peer0.orgc.fabric.localhost
+      - peer1.orgc.fabric.localhost
+    certificateAuthorities:
+      - ca.orgc.fabric.localhost
+orderers:
+  orderer0.consortium.orga.fabric.localhost:
+    url: grpcs://orderer0.consortium.orga.fabric.localhost:7030
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: orderer0.consortium.orga.fabric.localhost
+  orderer0.consortium.orgb.fabric.localhost:
+    url: grpcs://orderer0.consortium.orgb.fabric.localhost:7050
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.consortium.orgb.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: orderer0.consortium.orgb.fabric.localhost
+  orderer0.consortium.orgc.fabric.localhost:
+    url: grpcs://orderer0.consortium.orgc.fabric.localhost:7070
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: orderer0.consortium.orgc.fabric.localhost
+peers:
+  peer0.orga.fabric.localhost:
+    url: grpcs://peer0.orga.fabric.localhost:7021
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer0.orga.fabric.localhost
+  peer1.orga.fabric.localhost:
+    url: grpcs://peer1.orga.fabric.localhost:7022
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer1.orga.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer1.orga.fabric.localhost
+  peer0.orgb.fabric.localhost:
+    url: grpcs://peer0.orgb.fabric.localhost:7041
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer0.orgb.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer0.orgb.fabric.localhost
+  peer1.orgb.fabric.localhost:
+    url: grpcs://peer1.orgb.fabric.localhost:7042
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer1.orgb.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer1.orgb.fabric.localhost
+  peer0.orgc.fabric.localhost:
+    url: grpcs://peer0.orgc.fabric.localhost:7061
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer0.orgc.fabric.localhost
+  peer1.orgc.fabric.localhost:
+    url: grpcs://peer1.orgc.fabric.localhost:7062
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer1.orgc.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer1.orgc.fabric.localhost
+certificateAuthorities:
+  ca.orga.fabric.localhost:
+    url: https://ca.orga.fabric.localhost:7020
+    caName: ca.orga.fabric.localhost
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orga.fabric.localhost/ca/ca.orga.fabric.localhost-cert.pem
+    httpOptions:
+      verify: false
+  ca.orgb.fabric.localhost:
+    url: https://ca.orgb.fabric.localhost:7040
+    caName: ca.orgb.fabric.localhost
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgb.fabric.localhost/ca/ca.orgb.fabric.localhost-cert.pem
+    httpOptions:
+      verify: false
+  ca.orgc.fabric.localhost:
+    url: https://ca.orgc.fabric.localhost:7060
+    caName: ca.orgc.fabric.localhost
+    tlsCACerts:
+      path: >-
+        ../crypto-config/peerOrganizations/orgc.fabric.localhost/ca/ca.orgc.fabric.localhost-cert.pem
+    httpOptions:
+      verify: false

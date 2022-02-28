@@ -1,0 +1,9 @@
+{
+  "network-configs": {
+    "network-orgc": {
+      "name": "Network of orgC",
+      "profile": "/opt/explorer/app/platform/fabric/connection-profile/connection-profile-orgc.json"
+    }
+  },
+  "license": "Apache-2.0"
+}

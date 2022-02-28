@@ -1,0 +1,56 @@
+{
+  "name": "fablo-test-network-orga",
+  "description": "Connection profile for Hyperledger Explorer in Fablo network",
+  "version": "1.0.0",
+  "client": {
+    "organization": "orgA",
+    "tlsEnable": true,
+    "enableAuthentication": true,
+    "adminCredential": {
+      "id": "admin",
+      "password": "adminpw"
+    },
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "organizations": {
+    "orgA": {
+      "mspid": "MSPorgA",
+      "adminPrivateKey": {
+        "path": "/tmp/crypto/peerOrganizations/orga.fabric.localhost/users/orgadmin@orga.fabric.localhost/msp/keystore/priv-key.pem"
+      },
+      "peers": [
+        "peer0.orga.fabric.localhost",
+        "peer1.orga.fabric.localhost"
+      ],
+      "signedCert": {
+        "path": "/tmp/crypto/peerOrganizations/orga.fabric.localhost/users/orgadmin@orga.fabric.localhost/msp/signcerts/cert.pem"
+      }
+    }
+  },
+  "peers": {
+    "peer0.orga.fabric.localhost": {
+      "url": "grpcs://peer0.orga.fabric.localhost:7021",
+      "tlsCACerts": {
+        "path": "/tmp/crypto/peerOrganizations/orga.fabric.localhost/tlsca/tlsca.orga.fabric.localhost-cert.pem"
+      }
+    },
+    "peer1.orga.fabric.localhost": {
+      "url": "grpcs://peer1.orga.fabric.localhost:7022",
+      "tlsCACerts": {
+        "path": "/tmp/crypto/peerOrganizations/orga.fabric.localhost/tlsca/tlsca.orga.fabric.localhost-cert.pem"
+      }
+    }
+  },
+  "channels": {
+    "consortium-chain": {
+      "peers": {}
+    }
+  }
+}

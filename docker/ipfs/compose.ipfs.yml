@@ -1,0 +1,233 @@
+# Docker Compose Container Infrastructure: IPFS
+# Based, in part, on: https://github.com/ipfs/ipfs-cluster/blob/v0.14.2/docker-compose.yml
+# First bootstrap the IPFS nodes!
+# See the '.env' file for the variables
+version: "3.7"
+
+
+# A single (layer 3 / IP) network is used to provide the private IPFS network(s) ('pnet0' and 'pnet1'), IPFS cluster traffic, and IPFS' (REST) APIs.
+# Advanced (production) network topologies are not accounted for in this demo.
+networks:
+  demo:
+    name: "${DEMO_NETWORK_NAME}"
+
+
+# IPFS peer service template
+x-ipfs-peer: &default-ipfs-peer
+  build: # Own IPFS image with private network bootstrap and mDNS toggle support
+    context: ./peer-image/
+    dockerfile: ipfs-peer.dockerfile
+    args:
+      IPFS_VERSION: "${IPFS_PEER_VERSION}"
+  image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
+  init: false # Image is already using 'tini' by default
+  networks:
+    - demo
+  environment: &env-default-ipfs-peer
+    LIBP2P_FORCE_PNET: 1 # Force usage of private IPFS network (daemon fails to start if no config present)
+    IPFS_SWARM_KEY: "${IPFS_PNET0_SWARM_KEY}" # Private IPFS network key
+    IPFS_PNET_BOOTSTRAP_PEERS: "${IPFS_PNET0_BOOTSTRAP_PEERS}" # Semicolon-separated list of bootstrap nodes for private IPFS networks (peer0 of each pnet)
+    IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
+
+
+# IPFS cluster service template
+x-ipfs-cluster: &default-ipfs-cluster
+  image: "ipfs/ipfs-cluster:${IPFS_CLUSTER_VERSION}"
+  init: false # Image is already using 'tini' by default
+  networks:
+    - demo
+  environment: &env-default-ipfs-cluster
+    CLUSTER_CRDT_TRUSTEDPEERS: '*' # Trust all peers in cluster
+    CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose Cluster API
+    CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
+
+
+services:
+  # Organization A
+  # 1 private IPFS network (pnet0) - 1 cluster - 2 peers - 2 cluster sidecars
+  peer0.pnet0.orga.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet0.orga.ipfs.localhost
+    hostname: peer0.pnet0.orga.ipfs.localhost
+    volumes:
+      - ./ipfs-data/orga/pnet0/peer0:/data/ipfs
+  cluster0.pnet0.orga.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster0.pnet0.orga.ipfs.localhost
+    hostname: cluster0.pnet0.orga.ipfs.localhost
+    depends_on:
+      - peer0.pnet0.orga.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster0.pnet0.orga.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGA_PNET0_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet0.orga.ipfs.localhost/tcp/5001
+    ports:
+      - "${IPFS_ORGA_PNET0_CLUSTER0_API_SOCKET}:9094" # Open Cluster API port (allows ipfs-cluster-ctl usage on Docker host)
+    volumes:
+      - ./ipfs-data/orga/pnet0/cluster0:/data/ipfs-cluster
+  peer1.pnet0.orga.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer1.pnet0.orga.ipfs.localhost
+    hostname: peer1.pnet0.orga.ipfs.localhost
+    ports:
+      - "${IPFS_ORGA_PNET0_PEER1_API_SOCKET}:5001" # Open Peer API port (allows webui usage on Docker host)
+    volumes:
+      - ./ipfs-data/orga/pnet0/peer1:/data/ipfs
+  cluster1.pnet0.orga.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster1.pnet0.orga.ipfs.localhost
+    hostname: cluster1.pnet0.orga.ipfs.localhost
+    depends_on:
+      - peer1.pnet0.orga.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster1.pnet0.orga.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGA_PNET0_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet0.orga.ipfs.localhost/tcp/5001
+    volumes:
+      - ./ipfs-data/orga/pnet0/cluster1:/data/ipfs-cluster
+    networks:
+      - demo
+
+  # Organization B
+  # 2 private IPFS networks (pnet0 & pnet1) - 2 cluster (1 cluster per private network) - 2 peers per cluster - 2 cluster sidecars per cluster
+  # pnet0
+  peer0.pnet0.orgb.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet0.orgb.ipfs.localhost
+    hostname: peer0.pnet0.orgb.ipfs.localhost
+    volumes:
+      - ./ipfs-data/orgb/pnet0/peer0:/data/ipfs
+  cluster0.pnet0.orgb.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster0.pnet0.orgb.ipfs.localhost
+    hostname: cluster0.pnet0.orgb.ipfs.localhost
+    depends_on:
+      - peer0.pnet0.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster0.pnet0.orgb.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGB_PNET0_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet0.orgb.ipfs.localhost/tcp/5001
+    ports:
+      - "${IPFS_ORGB_PNET0_CLUSTER0_API_SOCKET}:9094"
+    volumes:
+      - ./ipfs-data/orgb/pnet0/cluster0:/data/ipfs-cluster
+  peer1.pnet0.orgb.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer1.pnet0.orgb.ipfs.localhost
+    hostname: peer1.pnet0.orgb.ipfs.localhost
+    ports:
+      - "${IPFS_ORGB_PNET0_PEER1_API_SOCKET}:5001"
+    volumes:
+      - ./ipfs-data/orgb/pnet0/peer1:/data/ipfs
+  cluster1.pnet0.orgb.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster1.pnet0.orgb.ipfs.localhost
+    hostname: cluster1.pnet0.orgb.ipfs.localhost
+    depends_on:
+      - peer1.pnet0.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster1.pnet0.orgb.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGB_PNET0_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet0.orgb.ipfs.localhost/tcp/5001
+    volumes:
+      - ./ipfs-data/orgb/pnet0/cluster1:/data/ipfs-cluster
+  # pnet1
+  peer0.pnet1.orgb.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet1.orgb.ipfs.localhost
+    hostname: peer0.pnet1.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-peer
+      IPFS_PNET_BOOTSTRAP_PEERS: ${IPFS_PNET1_BOOTSTRAP_PEERS}
+      IPFS_SWARM_KEY: ${IPFS_PNET1_SWARM_KEY}
+    volumes:
+      - ./ipfs-data/orgb/pnet1/peer0:/data/ipfs
+  cluster0.pnet1.orgb.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster0.pnet1.orgb.ipfs.localhost
+    hostname: cluster0.pnet1.orgb.ipfs.localhost
+    depends_on:
+      - peer0.pnet1.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster0.pnet1.orgb.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGB_PNET1_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet1.orgb.ipfs.localhost/tcp/5001
+    ports:
+      - "${IPFS_ORGB_PNET1_CLUSTER0_API_SOCKET}:9094"
+    volumes:
+      - ./ipfs-data/orgb/pnet1/cluster0:/data/ipfs-cluster
+  peer1.pnet1.orgb.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer1.pnet1.orgb.ipfs.localhost
+    hostname: peer1.pnet1.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-peer
+      IPFS_PNET_BOOTSTRAP_PEERS: ${IPFS_PNET1_BOOTSTRAP_PEERS}
+      IPFS_SWARM_KEY: ${IPFS_PNET1_SWARM_KEY}
+    ports:
+      - "${IPFS_ORGB_PNET1_PEER1_API_SOCKET}:5001"
+    volumes:
+      - ./ipfs-data/orgb/pnet1/peer1:/data/ipfs
+  cluster1.pnet1.orgb.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster1.pnet1.orgb.ipfs.localhost
+    hostname: cluster1.pnet1.orgb.ipfs.localhost
+    depends_on:
+      - peer1.pnet1.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster1.pnet1.orgb.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGB_PNET1_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet1.orgb.ipfs.localhost/tcp/5001
+    volumes:
+      - ./ipfs-data/orgb/pnet1/cluster1:/data/ipfs-cluster
+
+  # Organization C
+  # 1 private IPFS network (pnet0) - 1 cluster - 2 peers - 2 cluster sidecars
+  peer0.pnet0.orgc.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet0.orgc.ipfs.localhost
+    hostname: peer0.pnet0.orgc.ipfs.localhost
+    volumes:
+      - ./ipfs-data/orgc/pnet0/peer0:/data/ipfs
+  cluster0.pnet0.orgc.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster0.pnet0.orgc.ipfs.localhost
+    hostname: cluster0.pnet0.orgc.ipfs.localhost
+    depends_on:
+      - peer0.pnet0.orgc.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster0.pnet0.orgc.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGC_PNET0_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet0.orgc.ipfs.localhost/tcp/5001
+    ports:
+      - "${IPFS_ORGC_PNET0_CLUSTER0_API_SOCKET}:9094"
+    volumes:
+      - ./ipfs-data/orgc/pnet0/cluster0:/data/ipfs-cluster
+  peer1.pnet0.orgc.ipfs.localhost:      
+    <<: *default-ipfs-peer
+    container_name: peer1.pnet0.orgc.ipfs.localhost
+    hostname: peer1.pnet0.orgc.ipfs.localhost
+    ports:
+      - "${IPFS_ORGC_PNET0_PEER1_API_SOCKET}:5001"
+    volumes:
+      - ./ipfs-data/orgc/pnet0/peer1:/data/ipfs
+  cluster1.pnet0.orgc.ipfs.localhost:
+    <<: *default-ipfs-cluster
+    container_name: cluster1.pnet0.orgc.ipfs.localhost
+    hostname: cluster1.pnet0.orgc.ipfs.localhost
+    depends_on:
+      - peer1.pnet0.orgc.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-cluster
+      CLUSTER_PEERNAME: cluster1.pnet0.orgc.ipfs.localhost
+      CLUSTER_SECRET: ${IPFS_ORGC_PNET0_CLUSTER_SECRET}
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet0.orgc.ipfs.localhost/tcp/5001
+    volumes:
+      - ./ipfs-data/orgc/pnet0/cluster1:/data/ipfs-cluster

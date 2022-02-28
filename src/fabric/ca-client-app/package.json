@@ -1,0 +1,28 @@
+{
+  "name": "fabric_jovian-colab-ca-client",
+  "version": "1.0.0",
+  "description": "Client app for registering identities in Fabric CA",
+  "keywords": [
+    "Hyperledger Fabric",
+    "fabric-ca"
+  ],
+  "license": "Apache-2.0",
+  "author": "Rik Janssen",
+  "private": true,
+  "main": "registerUser.js",
+  "scripts": {
+    "test": "node registerUser.js --wallet ./wallet --admin admin --profile profile.yaml --org orgA --user test",
+    "dist": "npm pack .",
+    "build": "echo \"No need to build\""
+  },
+  "engines": {
+    "node": ">=12.13.1 <13",
+    "npm": ">=6.12.1"
+  },
+  "dependencies": {
+    "fabric-ca-client": "2.2.11",
+    "fabric-network": "2.2.11",
+    "js-yaml": "^3.12.0",
+    "minimist": "^1.2.5"
+  }
+}

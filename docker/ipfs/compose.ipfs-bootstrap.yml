@@ -1,0 +1,56 @@
+# Docker Compose Container Infrastructure: IPFS Bootstrap Nodes
+# See the 'compose.ipfs.yml' file for more info
+version: "3.7"
+
+
+# IPFS peer service template
+x-ipfs-peer: &default-ipfs-peer
+  build:
+    context: ./peer-image/
+    dockerfile: ipfs-peer.dockerfile
+    args:
+      IPFS_VERSION: "${IPFS_PEER_VERSION}"
+  image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
+  init: false
+  environment: &env-default-ipfs-peer
+    LIBP2P_FORCE_PNET: 1
+    IPFS_SWARM_KEY: "${IPFS_PNET0_SWARM_KEY}"
+    IPFS_PNET_BOOTSTRAP_PEERS: 'init'
+    IPFS_MDNS: 'false'
+
+
+services:
+  # Organization A
+  peer0.pnet0.orga.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet0.orga.ipfs.localhost
+    hostname: peer0.pnet0.orga.ipfs.localhost
+    volumes:
+      - ./ipfs-data/orga/pnet0/peer0:/data/ipfs
+
+  # Organization B
+  # pnet0
+  peer0.pnet0.orgb.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet0.orgb.ipfs.localhost
+    hostname: peer0.pnet0.orgb.ipfs.localhost
+    volumes:
+      - ./ipfs-data/orgb/pnet0/peer0:/data/ipfs
+  # pnet1
+  peer0.pnet1.orgb.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name:  peer0.pnet1.orgb.ipfs.localhost
+    hostname:  peer0.pnet1.orgb.ipfs.localhost
+    environment:
+      <<: *env-default-ipfs-peer
+      IPFS_SWARM_KEY: ${IPFS_PNET1_SWARM_KEY}
+    volumes:
+      - ./ipfs-data/orgb/pnet1/peer0:/data/ipfs
+
+  # Organization C
+  peer0.pnet0.orgc.ipfs.localhost:
+    <<: *default-ipfs-peer
+    container_name: peer0.pnet0.orgc.ipfs.localhost
+    hostname: peer0.pnet0.orgc.ipfs.localhost
+    volumes:
+      - ./ipfs-data/orgc/pnet0/peer0:/data/ipfs
