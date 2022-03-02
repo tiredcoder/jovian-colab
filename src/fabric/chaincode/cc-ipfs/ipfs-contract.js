@@ -22,8 +22,9 @@ class IPFSContract extends Contract {
 
     // Attributes
     this.clientId = {};
-    this.clientMSPId = ""
+    this.clientMSPId = "";
     this.clientCert = "";
+    this.clientCertCN = "";
   }
 
   // Populate attributes
@@ -31,6 +32,10 @@ class IPFSContract extends Contract {
     this.clientId = new ClientIdentity(ctx.stub);
     this.clientMSPId = this.clientId.getMSPID();
     this.clientCert = new X509Certificate(this.clientId.getIDBytes());
+    this.clientCertCN = this.clientCert.subject.split('\n').filter(cn => cn.includes('CN=')).toString().slice(3);
+
+    console.log(`clientMSPId: ${this.clientMSPId}`);
+    console.log(`clientCertCN: ${this.clientCertCN}`);
   }
 
   // Verify if the network or data with the given ID exists in world state
@@ -55,7 +60,7 @@ class IPFSContract extends Contract {
   }
 
   // Add an IPFS network description
-  async addNetwork(ctx, id, owner, bootstrapNodes, netKey, acl) {
+  async addNetwork(ctx, id, bootstrapNodes, netKey, acl) {
     // Only admins can add IPFS network descriptions
     if (!this.clientCert.subject.includes('OU=admin')) {
       throw new Error(`Only admins can add IPFS network descriptions.`);
@@ -67,6 +72,11 @@ class IPFSContract extends Contract {
       throw new Error(`The IPFS network description with ID '${id}' already exists`);
     }
 
+    const owner = {
+      MSPId: this.clientMSPId,
+      ID: this.clientCertCN,
+    };
+
     const network = {
       ID: id,
       Owner: owner,
@@ -76,8 +86,9 @@ class IPFSContract extends Contract {
     };
 
     // Insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-    await ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(network))));
-    return JSON.stringify(network);
+    const result = JSON.stringify(sortKeysRecursive(network));
+    await ctx.stub.putState(id, Buffer.from(result));
+    return result;
   }
 
   // Get an IPFS network description
@@ -99,6 +110,7 @@ class IPFSContract extends Contract {
     // Only ACL users and owner can get network info
     const networkJSON = JSON.parse(networkAsBytes.toString());
     console.log(`owner: ${networkJSON.Owner}`);
+    console.log(`clientCertCN: ${networkJSON.Owner.clientCertCN}`);
     
     return networkJSON;
   }

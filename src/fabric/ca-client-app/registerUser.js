@@ -147,6 +147,9 @@ async function main() {
   var walletPath = args['wallet'];
   var adminUsername = args['admin'];
 
+  // Greeting
+  console.log(' --- Fabric CA Client Application --- ');
+
   // Verify existence of command line arguments
   if (connectionProfileFile == null || organization == null || username == null) {
     console.error('Missing argument(s)!');
