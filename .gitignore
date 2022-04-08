@@ -3,6 +3,16 @@
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
+# Fabric
+genesisblock
+*.tx
+*.block
+admincerts
+cacerts
+keystore
+signcerts
+tlscacerts
+
 # IPython
 profile_default/
 ipython_config.py

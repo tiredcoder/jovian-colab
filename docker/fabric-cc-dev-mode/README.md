@@ -16,7 +16,6 @@ The chaincode directory and fabric-config directory will be mounted into the con
 ## Start the infrastructure (first start the IPFS infra)
 ```
 ./fabric-docker-ccdev.sh up
-
 ```
 
 ## Build the chaincode (i.e. install the Node.js modules), start it, and approve/commit it (only needed once)
@@ -25,7 +24,6 @@ The chaincode gets deployed as 'ccdevmode', version 0.1, on channel 'ch1'. Chang
 ./fabric-docker-ccdev.sh build [chaincode directory]
 ./fabric-docker-ccdev.sh start [chaincode directory]
 ./fabric-docker-ccdev.sh commit
-
 ```
 
 ## Invoke the chaincode
@@ -48,4 +46,3 @@ The chaincode gets deployed as 'ccdevmode', version 0.1, on channel 'ch1'. Chang
 ```
 docker volume prune
 ```
-
