@@ -11,19 +11,15 @@ networks:
       name: ${DEMO_NETWORK_NAME}
 
 services:
-  cc-builder-nodejs.fabric.localhost:
+  cc-builder-nodejs-image.fabric.localhost:
     build: # Own Node.js image used for building and running the chaincode
       context: ./nodejs-image/
       dockerfile: fabric-nodejs.dockerfile
       args:
         NODE_VERSION: "${CHAINCODE_NODE_VERSION}"
     image: "${COMPOSE_PROJECT_NAME}-nodejs:${CHAINCODE_NODE_VERSION}-alpine"
-    container_name: cc-builder-nodejs.fabric.localhost
-    tty: true
-    working_dir: /mnt/chaincode
-    command: /bin/sh
-    volumes:
-      - ../../../src/fabric/chaincode:/mnt/chaincode
+    container_name: cc-builder-nodejs-image.fabric.localhost
+    command: /bin/true # Placeholder; we only use this container to enforce the image build
     networks:
       - demo
 

@@ -1,0 +1,14 @@
+PeerOrgs:
+  - Name: SampleOrg
+    Domain: fabric-ccdev.localhost
+    EnableNodeOUs: false
+    CA:
+      Hostname: ca # implicitly ca.org1.example.com
+      Country: NL
+      Province: Noord-Holland
+      Locality: Amsterdam
+      OrganizationalUnit: COP
+    Specs:
+    Template:
+      Count: 1
+

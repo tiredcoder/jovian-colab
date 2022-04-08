@@ -4,13 +4,12 @@
 
 # Use a nodejs container to do the build
 chaincodeBuild() {
-  local CHAINCODE_NAME=$1
-  local CHAINCODE_LANG=$2
-  local CHAINCODE_DIR_PATH=$3
-  local CHAINCODE_LANG_VERSION=$4
-  local CHAINCODE_DIR_BASENAME="$(basename ${CHAINCODE_DIR_PATH})"
+  local CHAINCODE_NAME="$1"
+  local CHAINCODE_LANG="$2"
+  local CHAINCODE_DIR="$3"
+  local CHAINCODE_LANG_VERSION="$4"
 
-  mkdir -p "$CHAINCODE_DIR_PATH"
+  mkdir -p "$CHAINCODE_DIR"
 
   if [ "$CHAINCODE_LANG" = "node" ]; then
     RECOMMENDED_NODE_VERSION="16.4.0"
@@ -20,7 +19,7 @@ chaincodeBuild() {
       CHAINCODE_LANG_VERSION="$RECOMMENDED_NODE_VERSION"
     fi
 
-    USES_OLD_FABRIC_SHIM="$(jq '.dependencies."fabric-shim" | contains("1.4.")' "$CHAINCODE_DIR_PATH/package.json")"
+    USES_OLD_FABRIC_SHIM="$(jq '.dependencies."fabric-shim" | contains("1.4.")' "$CHAINCODE_DIR/package.json")"
     if [ "$USES_OLD_FABRIC_SHIM" == "true" ]; then
       RECOMMENDED_NODE_VERSION="8.9"
     fi
@@ -33,12 +32,11 @@ chaincodeBuild() {
     echo "Buiding chaincode '$CHAINCODE_NAME'..."
     inputLog "CHAINCODE_NAME: $CHAINCODE_NAME"
     inputLog "CHAINCODE_LANG: $CHAINCODE_LANG"
-    inputLog "CHAINCODE_DIR_PATH: $CHAINCODE_DIR_PATH"
-    inputLog "CHAINCODE_DIR_BASENAME: $CHAINCODE_DIR_BASENAME"
+    inputLog "CHAINCODE_DIR: $CHAINCODE_DIR"
     inputLog "CHAINCODE_LANG_VERSION: $CHAINCODE_LANG_VERSION (recommended: $RECOMMENDED_NODE_VERSION)"
     
-    # Build chaincode in Docker container using specified Node.js version
-    docker exec cc-builder-nodejs.fabric.localhost sh -c "cd '$CHAINCODE_DIR_BASENAME' && npm install --silent && npm run build && chown -R $(id -u):$(id -g) ./"
+    # Build chaincode in (ephemeral) Docker container using specified Node.js version
+    docker run --rm -i --name "cc-builder-nodejs.${COMPOSE_PROJECT_NAME}" --volume="${CHAINCODE_DIR}:/mnt/chaincode" --workdir="/mnt/chaincode" --network="${DEMO_NETWORK_NAME}" "${COMPOSE_PROJECT_NAME}-nodejs:${CHAINCODE_NODE_VERSION}-alpine" sh -c "npm install --silent && npm run build && chown -R $(id -u):$(id -g) ./"
   fi
 }
 
