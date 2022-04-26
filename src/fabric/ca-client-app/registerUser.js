@@ -4,10 +4,10 @@
  * Client app for registering identities in Fabric CA
  *
  * Based in part on the "Commercial Paper" example:
- *  - https://github.com/hyperledger/fabric-samples/tree/main/commercial-paper
- *  - https://hyperledger-fabric.readthedocs.io/en/release-2.4/tutorial/commercial_paper.html
+ *  - https://github.com/hyperledger/fabric-samples/tree/0f877fad4ddf94e35b6ba56aecb57f4ee58a5a9f/commercial-paper
+ *  - https://github.com/hyperledger/fabric/blob/0e9cdb2e7ac24a5841693830ca875507dcdf636b/docs/source/tutorial/commercial_paper.md#commercial-paper-tutorial
  * 
- * Also see: https://hyperledger-fabric-ca.readthedocs.io/en/latest/deployguide/use_CA.html#overview-of-registration-and-enrollment
+ * Also see: https://github.com/hyperledger/fabric-ca/blob/d0dca4568eb906f5c6d1e11a80dbdcf7d723d506/docs/source/deployguide/use_CA.md#overview-of-registration-and-enrollment
  */
 
 'use strict';

@@ -36,7 +36,7 @@ services:
       #
       - CORE_PEER_LOCALMSPID=MSPorgA
       - CORE_PEER_MSPCONFIGPATH=/var/hyperledger/cli/crypto/users/orgadmin@orga.fabric.localhost/msp
-      - CORE_PEER_ADDRESS=peer0.orga.fabric.localhost:7021
+      - CORE_PEER_ADDRESS=peer0.orga.fabric.localhost:7051
       # enabled TLS
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/cli/crypto/tlsca/tlsca.orga.fabric.localhost-cert.pem
@@ -67,9 +67,11 @@ services:
     container_name: orderer0.consortium.orga.fabric.localhost
     image: hyperledger/fabric-orderer:${FABRIC_VERSION}
     environment:
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer0.consortium.orga.fabric.localhost:9443
       - FABRIC_LOGGING_SPEC=${LOGGING_LEVEL}
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7030
+      - ORDERER_GENERAL_LISTENPORT=7050
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/config/ConsortiumGenesis.block
@@ -86,8 +88,6 @@ services:
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
     working_dir: /var/hyperledger/orderer
     command: orderer
-    ports:
-      - 127.0.0.1:7030:7030
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/msp/:/var/hyperledger/orderer/msp
@@ -99,14 +99,16 @@ services:
     container_name: peer0.orga.fabric.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orga.fabric.localhost:9443
       - CORE_PEER_LOCALMSPID=MSPorgA
       - CORE_PEER_ID=peer0.orga.fabric.localhost
-      - CORE_PEER_ADDRESS=peer0.orga.fabric.localhost:7021
-      - CORE_PEER_LISTENADDRESS=peer0.orga.fabric.localhost:7021
-      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orga.fabric.localhost:7021
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orga.fabric.localhost:7021
-      - CORE_PEER_GOSSIP_BOOTSTRAP="peer1.orga.fabric.localhost:7022"
-      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.orga.fabric.localhost:7050
+      - CORE_PEER_ADDRESS=peer0.orga.fabric.localhost:7051
+      - CORE_PEER_LISTENADDRESS=peer0.orga.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orga.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orga.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP="peer1.orga.fabric.localhost:7051"
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.orga.fabric.localhost:7052
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
       - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:${FABRIC_CCENV_VERSION}
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:${FABRIC_BASEOS_VERSION}
@@ -127,8 +129,6 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
-    ports:
-      - 127.0.0.1:7021:7021
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
@@ -142,14 +142,16 @@ services:
     container_name: peer1.orga.fabric.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.orga.fabric.localhost:9443
       - CORE_PEER_LOCALMSPID=MSPorgA
       - CORE_PEER_ID=peer1.orga.fabric.localhost
-      - CORE_PEER_ADDRESS=peer1.orga.fabric.localhost:7022
-      - CORE_PEER_LISTENADDRESS=peer1.orga.fabric.localhost:7022
-      - CORE_PEER_GOSSIP_ENDPOINT=peer1.orga.fabric.localhost:7022
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.orga.fabric.localhost:7022
-      - CORE_PEER_GOSSIP_BOOTSTRAP="peer0.orga.fabric.localhost:7021"
-      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.orga.fabric.localhost:7050
+      - CORE_PEER_ADDRESS=peer1.orga.fabric.localhost:7051
+      - CORE_PEER_LISTENADDRESS=peer1.orga.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer1.orga.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.orga.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP="peer0.orga.fabric.localhost:7051"
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.orga.fabric.localhost:7052
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
       - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:${FABRIC_CCENV_VERSION}
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:${FABRIC_BASEOS_VERSION}
@@ -170,8 +172,6 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
-    ports:
-      - 127.0.0.1:7022:7022
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer1.orga.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
@@ -194,7 +194,7 @@ services:
       #
       - CORE_PEER_LOCALMSPID=MSPorgB
       - CORE_PEER_MSPCONFIGPATH=/var/hyperledger/cli/crypto/users/orgadmin@orgb.fabric.localhost/msp
-      - CORE_PEER_ADDRESS=peer0.orgb.fabric.localhost:7041
+      - CORE_PEER_ADDRESS=peer0.orgb.fabric.localhost:7051
       # enabled TLS
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/cli/crypto/tlsca/tlsca.orgb.fabric.localhost-cert.pem
@@ -225,6 +225,8 @@ services:
     container_name: orderer0.consortium.orgb.fabric.localhost
     image: hyperledger/fabric-orderer:${FABRIC_VERSION}
     environment:
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer0.consortium.orgb.fabric.localhost:9443
       - FABRIC_LOGGING_SPEC=${LOGGING_LEVEL}
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_LISTENPORT=7050
@@ -244,8 +246,6 @@ services:
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
     working_dir: /var/hyperledger/orderer
     command: orderer
-    ports:
-      - 127.0.0.1:7050:7050
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.consortium.orgb.fabric.localhost/msp/:/var/hyperledger/orderer/msp
@@ -257,9 +257,11 @@ services:
     container_name: orderer0.orgb.orgb.fabric.localhost
     image: hyperledger/fabric-orderer:${FABRIC_VERSION}
     environment:
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer0.orgb.orgb.fabric.localhost:9443
       - FABRIC_LOGGING_SPEC=${LOGGING_LEVEL}
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7051
+      - ORDERER_GENERAL_LISTENPORT=7050
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/config/OrgbGenesis.block
@@ -276,8 +278,6 @@ services:
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
     working_dir: /var/hyperledger/orderer
     command: orderer
-    ports:
-      - 127.0.0.1:7051:7051
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.orgb.orgb.fabric.localhost/msp/:/var/hyperledger/orderer/msp
@@ -289,9 +289,11 @@ services:
     container_name: orderer1.orgb.orgb.fabric.localhost
     image: hyperledger/fabric-orderer:${FABRIC_VERSION}
     environment:
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer1.orgb.orgb.fabric.localhost:9443
       - FABRIC_LOGGING_SPEC=${LOGGING_LEVEL}
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7052
+      - ORDERER_GENERAL_LISTENPORT=7050
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/config/OrgbGenesis.block
@@ -308,8 +310,6 @@ services:
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
     working_dir: /var/hyperledger/orderer
     command: orderer
-    ports:
-      - 127.0.0.1:7052:7052
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer1.orgb.orgb.fabric.localhost/msp/:/var/hyperledger/orderer/msp
@@ -321,14 +321,16 @@ services:
     container_name: peer0.orgb.fabric.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgb.fabric.localhost:9443
       - CORE_PEER_LOCALMSPID=MSPorgB
       - CORE_PEER_ID=peer0.orgb.fabric.localhost
-      - CORE_PEER_ADDRESS=peer0.orgb.fabric.localhost:7041
-      - CORE_PEER_LISTENADDRESS=peer0.orgb.fabric.localhost:7041
-      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgb.fabric.localhost:7041
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgb.fabric.localhost:7041
-      - CORE_PEER_GOSSIP_BOOTSTRAP="peer1.orgb.fabric.localhost:7042"
-      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.orgb.fabric.localhost:7050
+      - CORE_PEER_ADDRESS=peer0.orgb.fabric.localhost:7051
+      - CORE_PEER_LISTENADDRESS=peer0.orgb.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgb.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgb.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP="peer1.orgb.fabric.localhost:7051"
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.orgb.fabric.localhost:7052
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
       - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:${FABRIC_CCENV_VERSION}
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:${FABRIC_BASEOS_VERSION}
@@ -349,8 +351,6 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
-    ports:
-      - 127.0.0.1:7041:7041
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer0.orgb.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
@@ -364,14 +364,16 @@ services:
     container_name: peer1.orgb.fabric.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.orgb.fabric.localhost:9443
       - CORE_PEER_LOCALMSPID=MSPorgB
       - CORE_PEER_ID=peer1.orgb.fabric.localhost
-      - CORE_PEER_ADDRESS=peer1.orgb.fabric.localhost:7042
-      - CORE_PEER_LISTENADDRESS=peer1.orgb.fabric.localhost:7042
-      - CORE_PEER_GOSSIP_ENDPOINT=peer1.orgb.fabric.localhost:7042
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.orgb.fabric.localhost:7042
-      - CORE_PEER_GOSSIP_BOOTSTRAP="peer0.orgb.fabric.localhost:7041"
-      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.orgb.fabric.localhost:7050
+      - CORE_PEER_ADDRESS=peer1.orgb.fabric.localhost:7051
+      - CORE_PEER_LISTENADDRESS=peer1.orgb.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer1.orgb.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.orgb.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP="peer0.orgb.fabric.localhost:7051"
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.orgb.fabric.localhost:7052
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
       - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:${FABRIC_CCENV_VERSION}
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:${FABRIC_BASEOS_VERSION}
@@ -392,8 +394,6 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
-    ports:
-      - 127.0.0.1:7042:7042
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer1.orgb.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
@@ -416,7 +416,7 @@ services:
       #
       - CORE_PEER_LOCALMSPID=MSPorgC
       - CORE_PEER_MSPCONFIGPATH=/var/hyperledger/cli/crypto/users/orgadmin@orgc.fabric.localhost/msp
-      - CORE_PEER_ADDRESS=peer0.orgc.fabric.localhost:7061
+      - CORE_PEER_ADDRESS=peer0.orgc.fabric.localhost:7051
       # enabled TLS
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/cli/crypto/tlsca/tlsca.orgc.fabric.localhost-cert.pem
@@ -447,9 +447,11 @@ services:
     container_name: orderer0.consortium.orgc.fabric.localhost
     image: hyperledger/fabric-orderer:${FABRIC_VERSION}
     environment:
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer0.consortium.orgc.fabric.localhost:9443
       - FABRIC_LOGGING_SPEC=${LOGGING_LEVEL}
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
-      - ORDERER_GENERAL_LISTENPORT=7070
+      - ORDERER_GENERAL_LISTENPORT=7050
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_BOOTSTRAPFILE=/var/hyperledger/config/ConsortiumGenesis.block
@@ -466,8 +468,6 @@ services:
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
     working_dir: /var/hyperledger/orderer
     command: orderer
-    ports:
-      - 127.0.0.1:7070:7070
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/msp/:/var/hyperledger/orderer/msp
@@ -479,14 +479,16 @@ services:
     container_name: peer0.orgc.fabric.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgc.fabric.localhost:9443
       - CORE_PEER_LOCALMSPID=MSPorgC
       - CORE_PEER_ID=peer0.orgc.fabric.localhost
-      - CORE_PEER_ADDRESS=peer0.orgc.fabric.localhost:7061
-      - CORE_PEER_LISTENADDRESS=peer0.orgc.fabric.localhost:7061
-      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgc.fabric.localhost:7061
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgc.fabric.localhost:7061
-      - CORE_PEER_GOSSIP_BOOTSTRAP="peer1.orgc.fabric.localhost:7062"
-      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.orgc.fabric.localhost:7050
+      - CORE_PEER_ADDRESS=peer0.orgc.fabric.localhost:7051
+      - CORE_PEER_LISTENADDRESS=peer0.orgc.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgc.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgc.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP="peer1.orgc.fabric.localhost:7051"
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.orgc.fabric.localhost:7052
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
       - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:${FABRIC_CCENV_VERSION}
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:${FABRIC_BASEOS_VERSION}
@@ -507,8 +509,6 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
-    ports:
-      - 127.0.0.1:7061:7061
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
@@ -522,14 +522,16 @@ services:
     container_name: peer1.orgc.fabric.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.orgc.fabric.localhost:9443
       - CORE_PEER_LOCALMSPID=MSPorgC
       - CORE_PEER_ID=peer1.orgc.fabric.localhost
-      - CORE_PEER_ADDRESS=peer1.orgc.fabric.localhost:7062
-      - CORE_PEER_LISTENADDRESS=peer1.orgc.fabric.localhost:7062
-      - CORE_PEER_GOSSIP_ENDPOINT=peer1.orgc.fabric.localhost:7062
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.orgc.fabric.localhost:7062
-      - CORE_PEER_GOSSIP_BOOTSTRAP="peer0.orgc.fabric.localhost:7061"
-      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.orgc.fabric.localhost:7050
+      - CORE_PEER_ADDRESS=peer1.orgc.fabric.localhost:7051
+      - CORE_PEER_LISTENADDRESS=peer1.orgc.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_ENDPOINT=peer1.orgc.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.orgc.fabric.localhost:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP="peer0.orgc.fabric.localhost:7051"
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.orgc.fabric.localhost:7052
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/peer/msp
       - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:${FABRIC_CCENV_VERSION}
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:${FABRIC_BASEOS_VERSION}
@@ -550,58 +552,11 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
-    ports:
-      - 127.0.0.1:7062:7062
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer1.orgc.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer1.orgc.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
       - ../fabric-config/config:/etc/hyperledger/fabric/config
-    networks:
-      - demo
-
-  db.explorer.fabric.localhost:
-    image: hyperledger/explorer-db:${HYPERLEDGER_EXPLORER_VERSION}
-    container_name: db.explorer.fabric.localhost
-    environment:
-      - DATABASE_DATABASE=fabricexplorer
-      - DATABASE_USERNAME=hppoc
-      - DATABASE_PASSWORD=password
-      - LOGSPOUT=ignore
-    healthcheck:
-      test: "pg_isready -h localhost -p 5432 -q -U postgres"
-      interval: 5s
-      timeout: 10s
-      retries: 7
-    volumes:
-      - /var/lib/postgresql/data
-    networks:
-      - demo
-
-  explorer.fabric.localhost:
-    image: hyperledger/explorer:${HYPERLEDGER_EXPLORER_VERSION}
-    restart: on-failure:8
-    container_name: explorer.fabric.localhost
-    environment:
-      - DATABASE_HOST=db.explorer.fabric.localhost
-      - DATABASE_DATABASE=fabricexplorer
-      - DATABASE_USERNAME=hppoc
-      - DATABASE_PASSWD=password
-      - LOG_LEVEL_APP=debug
-      - LOG_LEVEL_DB=debug
-      - LOG_LEVEL_CONSOLE=info
-      - LOG_CONSOLE_STDOUT=true
-      - DISCOVERY_AS_LOCALHOST=false
-      - LOGSPOUT=ignore
-    volumes:
-      - ../fabric-config/explorer/config-global.json:/opt/explorer/app/platform/fabric/config.json
-      - ../fabric-config/explorer:/opt/explorer/app/platform/fabric/connection-profile
-      - ../fabric-config/crypto-config:/tmp/crypto
-    ports:
-      - "127.0.0.1:7010:8080"
-    depends_on:
-      db.explorer.fabric.localhost:
-        condition: service_healthy
     networks:
       - demo

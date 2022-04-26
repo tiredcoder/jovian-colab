@@ -4,9 +4,9 @@
 #
 # More information at https://github.com/gliderlabs/logspout/tree/master/httpstream
 
-# Import variables from .env file (DEMO_NETWORK_NAME)
+# Import variables from .env file (DEMO_NETWORK_NAME and MONITORING_LOGSPOUT_SOCKET)
 set -o allexport
-source ./fabric/fabric-docker/.env
+source ./.env
 set +o allexport
 
 # Parse script args
@@ -17,9 +17,9 @@ else
 fi
 
 if [ -z "$2" ]; then
-   PORT=8000
+   SOCKET="$MONITORING_LOGSPOUT_SOCKET"
 else
-   PORT="$2"
+   SOCKET="$2"
 fi
 
 if [ -z "$3" ]; then
@@ -36,10 +36,10 @@ docker rm "${CONTAINER_NAME}" 2> /dev/null 1>&2 || true
 
 docker run -d --name="${CONTAINER_NAME}" \
 	--volume=/var/run/docker.sock:/var/run/docker.sock \
-	--publish=127.0.0.1:${PORT}:80 \
+	--publish=${SOCKET}:80 \
 	--network ${DOCKER_NETWORK} \
 	gliderlabs/logspout
 
 # Get output
 sleep 4
-curl http://127.0.0.1:${PORT}/logs
+curl http://${SOCKET}/logs

@@ -40,6 +40,8 @@ x-ipfs-cluster: &default-ipfs-cluster
     CLUSTER_CRDT_TRUSTEDPEERS: '*' # Trust all peers in cluster
     CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose Cluster API
     CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
+    CLUSTER_METRICS_ENABLESTATS: 'true' # Enable metrics gathering via Prometheus
+    CLUSTER_METRICS_PROMETHEUSENDPOINT: '/ip4/0.0.0.0/tcp/8888' # Set Prometheus endpoint to listen on all interfaces
 
 
 services:

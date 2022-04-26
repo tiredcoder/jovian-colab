@@ -1,0 +1,56 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter.monitor.localhost:9100"]
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor.monitor.localhost:8080"]
+  - job_name: "ipfs-cluster"
+    scrape_interval: 2s
+    static_configs:
+      - targets: [
+        "cluster0.pnet0.orga.ipfs.localhost:8888",
+        "cluster1.pnet0.orga.ipfs.localhost:8888",
+        "cluster0.pnet0.orgb.ipfs.localhost:8888",
+        "cluster1.pnet0.orgb.ipfs.localhost:8888",
+        "cluster0.pnet1.orgb.ipfs.localhost:8888",
+        "cluster1.pnet1.orgb.ipfs.localhost:8888",
+        "cluster0.pnet0.orgc.ipfs.localhost:8888",
+        "cluster1.pnet0.orgc.ipfs.localhost:8888"
+      ]
+  - job_name: "ipfs-peer"
+    scrape_interval: 2s
+    metrics_path: "/debug/metrics/prometheus"
+    static_configs:
+      - targets: [
+        "peer0.pnet0.orga.ipfs.localhost:5001",
+        "peer1.pnet0.orga.ipfs.localhost:5001",
+        "peer0.pnet0.orgb.ipfs.localhost:5001",
+        "peer1.pnet0.orgb.ipfs.localhost:5001",
+        "peer0.pnet1.orgb.ipfs.localhost:5001",
+        "peer1.pnet1.orgb.ipfs.localhost:5001",
+        "peer0.pnet0.orgc.ipfs.localhost:5001",
+        "peer1.pnet0.orgc.ipfs.localhost:5001"
+      ]
+  - job_name: "fabric"
+    static_configs:
+      - targets: [
+        "orderer0.consortium.orga.fabric.localhost:9443",
+        "orderer0.consortium.orgb.fabric.localhost:9443",
+        "orderer0.consortium.orgc.fabric.localhost:9443",
+        "orderer0.orgb.orgb.fabric.localhost:9443",
+        "orderer1.orgb.orgb.fabric.localhost:9443",
+        "peer0.orga.fabric.localhost:9443",
+        "peer1.orga.fabric.localhost:9443",
+        "peer0.orgb.fabric.localhost:9443",
+        "peer1.orgb.fabric.localhost:9443",
+        "peer0.orgc.fabric.localhost:9443",
+        "peer1.orgc.fabric.localhost:9443"
+      ]

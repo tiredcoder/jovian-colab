@@ -1,5 +1,5 @@
 # Docker Compose Container Infrastructure: Hyperledger Fabric ***CHAINCODE DEV MODE***
-# Do *not* run this file directly (using Docker Compose)!
+# Do *not* run this file directly (using Docker Compose)! Use the 'fabric-docker-ccdev.sh' script instead.
 # See the '.env' file for the variables
 version: "3.7"
 

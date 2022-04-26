@@ -87,7 +87,7 @@ organizations:
       - ca.orgc.fabric.localhost
 orderers:
   orderer0.consortium.orga.fabric.localhost:
-    url: grpcs://orderer0.consortium.orga.fabric.localhost:7030
+    url: grpcs://orderer0.consortium.orga.fabric.localhost:7050
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/tls/ca.crt
@@ -101,21 +101,21 @@ orderers:
     grpcOptions:
       ssl-target-name-override: orderer0.consortium.orgb.fabric.localhost
   orderer0.consortium.orgc.fabric.localhost:
-    url: grpcs://orderer0.consortium.orgc.fabric.localhost:7070
+    url: grpcs://orderer0.consortium.orgc.fabric.localhost:7050
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: orderer0.consortium.orgc.fabric.localhost
   orderer0.orgb.orgb.fabric.localhost:
-    url: grpcs://orderer0.orgb.orgb.fabric.localhost:7051
+    url: grpcs://orderer0.orgb.orgb.fabric.localhost:7050
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.orgb.orgb.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: orderer0.orgb.orgb.fabric.localhost
   orderer1.orgb.orgb.fabric.localhost:
-    url: grpcs://orderer1.orgb.orgb.fabric.localhost:7052
+    url: grpcs://orderer1.orgb.orgb.fabric.localhost:7050
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer1.orgb.orgb.fabric.localhost/tls/ca.crt
@@ -123,42 +123,42 @@ orderers:
       ssl-target-name-override: orderer1.orgb.orgb.fabric.localhost
 peers:
   peer0.orga.fabric.localhost:
-    url: grpcs://peer0.orga.fabric.localhost:7021
+    url: grpcs://peer0.orga.fabric.localhost:7051
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer0.orga.fabric.localhost
   peer1.orga.fabric.localhost:
-    url: grpcs://peer1.orga.fabric.localhost:7022
+    url: grpcs://peer1.orga.fabric.localhost:7051
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer1.orga.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer1.orga.fabric.localhost
   peer0.orgb.fabric.localhost:
-    url: grpcs://peer0.orgb.fabric.localhost:7041
+    url: grpcs://peer0.orgb.fabric.localhost:7051
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer0.orgb.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer0.orgb.fabric.localhost
   peer1.orgb.fabric.localhost:
-    url: grpcs://peer1.orgb.fabric.localhost:7042
+    url: grpcs://peer1.orgb.fabric.localhost:7051
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer1.orgb.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer1.orgb.fabric.localhost
   peer0.orgc.fabric.localhost:
-    url: grpcs://peer0.orgc.fabric.localhost:7061
+    url: grpcs://peer0.orgc.fabric.localhost:7051
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer0.orgc.fabric.localhost
   peer1.orgc.fabric.localhost:
-    url: grpcs://peer1.orgc.fabric.localhost:7062
+    url: grpcs://peer1.orgc.fabric.localhost:7051
     tlsCACerts:
       path: >-
         ../crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer1.orgc.fabric.localhost/tls/ca.crt
@@ -166,7 +166,7 @@ peers:
       ssl-target-name-override: peer1.orgc.fabric.localhost
 certificateAuthorities:
   ca.orga.fabric.localhost:
-    url: https://ca.orga.fabric.localhost:7020
+    url: https://ca.orga.fabric.localhost:7054
     caName: ca.orga.fabric.localhost
     tlsCACerts:
       path: >-
@@ -174,7 +174,7 @@ certificateAuthorities:
     httpOptions:
       verify: false
   ca.orgb.fabric.localhost:
-    url: https://ca.orgb.fabric.localhost:7040
+    url: https://ca.orgb.fabric.localhost:7054
     caName: ca.orgb.fabric.localhost
     tlsCACerts:
       path: >-
@@ -182,7 +182,7 @@ certificateAuthorities:
     httpOptions:
       verify: false
   ca.orgc.fabric.localhost:
-    url: https://ca.orgc.fabric.localhost:7060
+    url: https://ca.orgc.fabric.localhost:7054
     caName: ca.orgc.fabric.localhost
     tlsCACerts:
       path: >-

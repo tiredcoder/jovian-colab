@@ -1,0 +1,134 @@
+# Docker Compose Container Infrastructure: IPFS, Fabric, Docker, and Host Monitoring
+version: "3.7"
+
+networks:
+  demo:
+    external:
+      name: ${DEMO_NETWORK_NAME}
+
+services:
+  node-exporter.monitor.localhost:
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION}
+    container_name: node-exporter.monitor.localhost
+    restart: unless-stopped
+    environment:
+      - LOGSPOUT=ignore
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.systemd'
+      - '--collector.processes'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - demo
+
+  cadvisor.monitor.localhost:
+    image: gcr.io/cadvisor/cadvisor:${CADVISOR_VERSION}
+    container_name: cadvisor.monitor.localhost
+    restart: unless-stopped
+    environment:
+      - LOGSPOUT=ignore  
+    ports:
+      - "${MONITORING_CADVISOR_SOCKET}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - demo
+
+  prometheus.monitor.localhost:
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    container_name: prometheus.monitor.localhost
+    restart: unless-stopped
+    environment:
+      - LOGSPOUT=ignore
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - node-exporter.monitor.localhost
+      - cadvisor.monitor.localhost
+    ports:
+      - "${MONITORING_PROMETHEUS_SOCKET}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - /prometheus
+    networks:
+      - demo
+
+  grafana.monitor.localhost:
+    build:
+      context: ./grafana/docker-image
+      dockerfile: grafana.dockerfile
+      args:
+        GRAFANA_VERSION: "${GRAFANA_VERSION}"
+        GF_INSTALL_IMAGE_RENDERER_PLUGIN: "true"
+    image: "jc_demo_grafana:${GRAFANA_VERSION}"
+    container_name: grafana.monitor.localhost
+    environment:
+      - LOGSPOUT=ignore
+      - GF_AUTH_PROXY_ENABLED=true
+      - GF_PATHS_PROVISIONING=/var/lib/grafana/provisioning/
+    depends_on:
+      - prometheus.monitor.localhost
+    ports:
+      - "${MONITORING_GRAFANA_SOCKET}:3000"
+    volumes:
+      - ./grafana/provisioning:/var/lib/grafana/provisioning
+      - /var/lib/grafana
+    networks:
+      - demo
+ 
+  db.explorer.monitor.localhost:
+    image: hyperledger/explorer-db:${HYPERLEDGER_EXPLORER_VERSION}
+    container_name: db.explorer.monitor.localhost
+    environment:
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWORD=password
+      - LOGSPOUT=ignore
+    healthcheck:
+      test: "pg_isready -h localhost -p 5432 -q -U postgres"
+      interval: 5s
+      timeout: 10s
+      retries: 7
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - demo
+
+  explorer.monitor.localhost:
+    image: hyperledger/explorer:${HYPERLEDGER_EXPLORER_VERSION}
+    restart: on-failure:8
+    container_name: explorer.monitor.localhost
+    environment:
+      - DATABASE_HOST=db.explorer.monitor.localhost
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWD=password
+      - LOG_LEVEL_APP=info
+      - LOG_LEVEL_DB=info
+      - LOG_LEVEL_CONSOLE=info
+      - LOG_CONSOLE_STDOUT=true
+      - DISCOVERY_AS_LOCALHOST=false
+      - LOGSPOUT=ignore
+    volumes:
+      - ./explorer/config-global.json:/opt/explorer/app/platform/fabric/config.json
+      - ./explorer:/opt/explorer/app/platform/fabric/connection-profile
+      - ../fabric/fabric-config/crypto-config:/tmp/crypto
+    ports:
+      - "${MONITORING_FABRIC_EXPLORER_SOCKET}:8080"
+    depends_on:
+      db.explorer.monitor.localhost:
+        condition: service_healthy
+    networks:
+      - demo

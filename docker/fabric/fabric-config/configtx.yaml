@@ -51,10 +51,10 @@ Organizations:
 
       AnchorPeers:
           - Host: peer0.orga.fabric.localhost
-            Port: 7021
+            Port: 7051
 
           - Host: peer1.orga.fabric.localhost
-            Port: 7022
+            Port: 7051
 
     - &orgB
       Name: MSPorgB
@@ -77,10 +77,10 @@ Organizations:
 
       AnchorPeers:
           - Host: peer0.orgb.fabric.localhost
-            Port: 7041
+            Port: 7051
 
           - Host: peer1.orgb.fabric.localhost
-            Port: 7042
+            Port: 7051
 
     - &orgC
       Name: MSPorgC
@@ -103,10 +103,10 @@ Organizations:
 
       AnchorPeers:
           - Host: peer0.orgc.fabric.localhost
-            Port: 7061
+            Port: 7051
 
           - Host: peer1.orgc.fabric.localhost
-            Port: 7062
+            Port: 7051
 
 ################################################################################
 #   SECTION: Application
@@ -138,13 +138,13 @@ Application: &ApplicationDefaults
 Orderer: &ConsortiumDefaults
     OrdererType: etcdraft
     Addresses:
-        - orderer0.consortium.orga.fabric.localhost:7030
+        - orderer0.consortium.orga.fabric.localhost:7050
         - orderer0.consortium.orgb.fabric.localhost:7050
-        - orderer0.consortium.orgc.fabric.localhost:7070
+        - orderer0.consortium.orgc.fabric.localhost:7050
     EtcdRaft:
         Consenters:
             - Host: orderer0.consortium.orga.fabric.localhost
-              Port: 7030
+              Port: 7050
               ClientTLSCert: crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/tls/server.crt
               ServerTLSCert: crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/tls/server.crt
 
@@ -154,7 +154,7 @@ Orderer: &ConsortiumDefaults
               ServerTLSCert: crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.consortium.orgb.fabric.localhost/tls/server.crt
 
             - Host: orderer0.consortium.orgc.fabric.localhost
-              Port: 7070
+              Port: 7050
               ClientTLSCert: crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/tls/server.crt
               ServerTLSCert: crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/tls/server.crt
 
@@ -188,17 +188,17 @@ Orderer: &ConsortiumDefaults
 Orderer: &OrgbDefaults
     OrdererType: etcdraft
     Addresses:
-        - orderer0.orgb.orgb.fabric.localhost:7051
-        - orderer1.orgb.orgb.fabric.localhost:7052
+        - orderer0.orgb.orgb.fabric.localhost:7050
+        - orderer1.orgb.orgb.fabric.localhost:7050
     EtcdRaft:
         Consenters:
             - Host: orderer0.orgb.orgb.fabric.localhost
-              Port: 7051
+              Port: 7050
               ClientTLSCert: crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.orgb.orgb.fabric.localhost/tls/server.crt
               ServerTLSCert: crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.orgb.orgb.fabric.localhost/tls/server.crt
 
             - Host: orderer1.orgb.orgb.fabric.localhost
-              Port: 7052
+              Port: 7050
               ClientTLSCert: crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer1.orgb.orgb.fabric.localhost/tls/server.crt
               ServerTLSCert: crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer1.orgb.orgb.fabric.localhost/tls/server.crt
 

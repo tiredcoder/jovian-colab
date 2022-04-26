@@ -6,9 +6,12 @@ Please see the '.env' file(s) for the configuration (e.g. which software version
 
 **SECURITY WARNING:** Do not expose this infrastructure directly to the Internet!
 
+## Overview
+![Infrastructure overview](infra.svg)
+
 ## Requirements
 The infrastructure consists of about 50 Docker containers.
- - Hardware: Tested on an x86_64 QEMU/KVM VM with a: 50GB virtual disk (SSD backend), 6GB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
+ - Hardware: Tested on an x86_64 QEMU/KVM VM with a: 65GiB virtual disk (SSD backend), 10GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
  - Software: See tables below.
 
 ## Versions
@@ -16,8 +19,8 @@ The infrastructure consists of the software mentioned in the table below. We use
 
 | Software                                           | Version                                                                   |
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
-| Ubuntu Server                                      | [20.04 LTS](https://releases.ubuntu.com/20.04/)                           |
-| Docker                                             | [20.10.12](https://docs.docker.com/engine)                                |
+| Ubuntu Server                                      | [20.04.4 LTS](https://releases.ubuntu.com/20.04/)                           |
+| Docker                                             | [20.10.14](https://docs.docker.com/engine)                                |
 | Docker Compose                                     | [1.29.2](https://docs.docker.com/compose)                                 |
 | IPFS Peer                                          | [0.11.0](https://github.com/ipfs/go-ipfs/tree/v0.11.0)                    |
 | IPFS Cluster                                       | [0.14.2](https://github.com/ipfs/ipfs-cluster/tree/v0.14.2)               |
@@ -26,7 +29,7 @@ The infrastructure consists of the software mentioned in the table below. We use
 | Fabric Chaincode Node.js SDK (Contract API)        | [2.4.1](https://github.com/hyperledger/fabric-chaincode-node/tree/v2.4.1) |
 | Fabric Gateway Node.js SDK (Application API)       | [1.0.1](https://github.com/hyperledger/fabric-gateway/tree/v1.0.1)        |
 | JupyterLab Notebook                                | [3.2.9](https://jupyterlab.readthedocs.io/en/3.2.x/)                      |
-| Firefox                                            | [97](https://www.mozilla.org/en-US/firefox/97.0/releasenotes/)            |
+| Firefox                                            | [99](https://www.mozilla.org/en-US/firefox/99.0/releasenotes/)            |
 
 ### Node.js
 The Hyperledger Fabric Node.js SDKs require different versions:
@@ -37,7 +40,36 @@ The Hyperledger Fabric Node.js SDKs require different versions:
 | Chaincode (Contract API)        | [16](https://github.com/hyperledger/fabric-chaincode-node/blob/v2.4.1/COMPATIBILITY.md) |
 | Gateway (Application API)       | [14](https://github.com/hyperledger/fabric-gateway/tree/v1.0.1#install-pre-reqs)        |
 
-As per the [documentation](https://hyperledger-fabric.readthedocs.io/en/release-2.4/sdk_chaincode.html), we use the client SDK (legacy) for CA administrative actions and the Gateway SDK as the actual client (i.e. JupyterLab).
+As per the [documentation](https://github.com/hyperledger/fabric/blob/8a4c7f3bdb17c18fe6c56ff7e3e2fc008e223005/docs/source/sdk_chaincode.md#fabric-contract-apis-and-application-apis), we use the client SDK (legacy) for CA administrative actions and the Gateway SDK as the actual client (i.e. JupyterLab).
+
+## Internal Endpoints Overview
+The following network sockets are used *within* the created virtual infrastructure. These endpoints are *not* reachable from the Docker host / outside.
+
+| Component(s)                     | Endpoint |
+| -------------------------------- | -------- |
+| IPFS libp2p swarm                | TCP 4001 |
+| IPFS Peer API (daemon/rw access) | TCP 5001 |
+| IPFS Cluster HTTP API            | TCP 9094 |
+| IPFS Cluster swarm               | TCP 9096 |
+| IPFS Cluster Prometheus Metrics  | TCP 8888 |
+| Fabric CA HTTP API               | TCP 7054 |
+| Fabric Orderer                   | TCP 7050 |
+| Fabric Peer: listen and gossip   | TCP 7051 |
+| Fabric Peer: chaincode listen    | TCP 7052 |
+| Fabric Prometheus Metrics        | TCP 9443 |
+| Node exporter Prometheus Metrics | TCP 9100 |
+| cAdvisor Web UI and metrics      | TCP 8080 |
+| Prometheus Web UI and metrics    | TCP 9090 |
+| Grafana Web UI                   | TCP 3000 |
+| Hyperledger Explorer Web UI      | TCP 8080 |
+| JupyterLab Notebook Web UI       | TCP 8888 |
+
+## Docker Host Network Bindings
+The following network sockets are used on the Docker host machine (configured via the .env files). We use these network bindings to selectively expose the container endpoints (see above) to the Docker host machine.
+ - IPFS peer APIs (IPFS Web UI access): 127.0.0.1:5000 - 127.0.0.1:5003
+ - IPFS cluster HTTP APIs: 127.0.0.1:6000 - 127.0.0.1:6003
+ - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
+ - JupyterLab Notebook Web UI: 127.0.0.1:8888
 
 ## Possibly change JupyterLab's UID and GID
 Several directories will be mounted into the JupyterLab container at */home/jovyan/work*. You can specify your user ID and group ID via the .env file. This allows for data sharing between the container and the Docker host.
@@ -115,26 +147,24 @@ docker exec cluster0.pnet0.orga.ipfs.localhost ipfs-cluster-ctl --help
 docker exec cluster0.pnet0.orga.ipfs.localhost ipfs-cluster-ctl peers ls
 ```
 
-**IPFS Web UI:** \
-IPFS's [web UI](https://github.com/ipfs/ipfs-webui) is *not* included within IPFS's Docker image because it's downloaded on first usage by IPFS using the public global IPFS network. As such, the web UI is not available by default when using a *private network*. Since the latest version is also hosted at [webui.ipfs.io](https://webui.ipfs.io), we can utilize it instead. Note that this requires [exposing the IPFS peers' API socket and allowing cross-origin (CORS) requests](https://github.com/ipfs/ipfs-webui/tree/v2.13.0#configure-ipfs-api-cors-headers), for example:
-```
-docker exec peer1.pnet0.orga.ipfs.localhost ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://localhost:3000", "https://webui.ipfs.io", "http://127.0.0.1:5001"]'
-docker exec peer1.pnet0.orga.ipfs.localhost ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
-docker restart peer1.pnet0.orga.ipfs.localhost
-```
-
 ## Verify that Fabric is running
 **CLI examples:**
 ```
 docker exec cli.orgb.fabric.localhost peer --help
 docker exec cli.orgb.fabric.localhost peer channel list
 ./fabric-docker.sh channel getinfo orgb-chain orgb peer0
-./monitordocker.sh
 ```
 
-**Hyperledger Explorer Web UI:** \
-We can use [Hyperledger Explorer](https://wiki.hyperledger.org/display/explorer) to visualize the blockchain(s) (e.g. view blocks, transactions and associated data). Note that Hyperledger Explorer is in beta and might show some incorrect information (e.g. it doesn't show the different networks for different channels or the correct chaincode(s) per channel). \
-[http://127.0.0.1:7010](http://127.0.0.1:7010)
+## Monitoring
+See the README.md file in the 'monitoring' directory.
+
+## Troubleshooting
+You can create a Ubuntu-based container to troubleshoot the infrastructure (i.e. to install tools and access all the endpoints from *within* the same virtual network).
+```
+docker run -it --rm --name troubleshoot --network jovian-colab_demo-net ubuntu:focal bash
+cd ~
+apt update && apt upgrade -y && apt install -y curl less
+```
 
 ## Stop/Cleanup the demo
 (From within the docker directory.)

@@ -1,5 +1,5 @@
-# Demo Infrastructure
-Creates a Hyperledger Fabric infrastructure running in *[development mode](https://hyperledger-fabric.readthedocs.io/en/release-2.4/peer-chaincode-devmode.html)* for rapid smart contract development. Note that the scripts used within this directory are depending on the '../fabric' directory. We also need to first start the IPFS infrastructure (this creates the needed network).
+# Demo Infrastructure - Dev Mode
+Creates a Hyperledger Fabric infrastructure running in *[development mode](https://github.com/hyperledger/fabric/blob/df388228156b882e07795a9041c0dde754f6e745/docs/source/peer-chaincode-devmode.md#running-chaincode-in-development-mode)* for rapid smart contract development. Note that the scripts used within this directory are depending on the '../fabric' directory. We also need to first start the IPFS infrastructure (this creates the needed network).
 
 Please see the '.env' file(s) for the configuration (e.g. which software version(s) to use, secret(s), etc.). Do *not* run multiple instances of this demo at the same time.
 

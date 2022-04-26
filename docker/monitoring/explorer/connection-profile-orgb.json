@@ -36,13 +36,13 @@
   },
   "peers": {
     "peer0.orgb.fabric.localhost": {
-      "url": "grpcs://peer0.orgb.fabric.localhost:7041",
+      "url": "grpcs://peer0.orgb.fabric.localhost:7051",
       "tlsCACerts": {
         "path": "/tmp/crypto/peerOrganizations/orgb.fabric.localhost/tlsca/tlsca.orgb.fabric.localhost-cert.pem"
       }
     },
     "peer1.orgb.fabric.localhost": {
-      "url": "grpcs://peer1.orgb.fabric.localhost:7042",
+      "url": "grpcs://peer1.orgb.fabric.localhost:7051",
       "tlsCACerts": {
         "path": "/tmp/crypto/peerOrganizations/orgb.fabric.localhost/tlsca/tlsca.orgb.fabric.localhost-cert.pem"
       }
