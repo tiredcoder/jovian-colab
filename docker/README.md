@@ -9,6 +9,8 @@ Please see the '.env' file(s) for the configuration (e.g. which software version
 ## Overview
 ![Infrastructure overview](infra.svg)
 
+The infrastructure consists of three organizations ('A', 'B', and 'C'), two Hyperledger Fabric blockchains/channels (one for the consortium and one for organization B), and two private IPFS networks (again, one for the consortium and one for organization B). The same chaincode/smart contract ('cc-ipfs') is deployed on both channels. The client application(s) consists of a JupyterLab Notebook and an IPFS peer.
+
 ## Requirements
 The infrastructure consists of about 50 Docker containers.
  - Hardware: Tested on an x86_64 QEMU/KVM VM with a: 65GiB virtual disk (SSD backend), 10GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).

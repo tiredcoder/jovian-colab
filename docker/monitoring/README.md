@@ -3,7 +3,7 @@ Creates a monitoring infrastructure. We gather metrics (using Prometheus) from t
 
 See the '.env' file for the configuration (e.g. which software version(s) to use, sockets, etc.). Do *not* run multiple instances of this infra at the same time.
 
-**SECURITY WARNING:** Do not expose this infrastructure directly to the Internet! The monitoring traffic is *not* encrypted.
+**SECURITY WARNING:** Do not expose this infrastructure directly to the Internet! The monitoring traffic is *not* encrypted!
 
 ## Overview
 ![Infrastructure overview](monitoring_infra.svg)
@@ -35,7 +35,7 @@ We provisioned Grafana dashboards for IPFS, Fabric, Docker, and the Docker host 
 ## Hyperledger Explorer Web UI
 We can use Hyperledger Explorer to visualize the blockchain(s) (e.g. view blocks, transactions and associated data). Note that Hyperledger Explorer is in beta and might show some incorrect information (e.g. it doesn't show the different networks for different channels or the correct chaincode(s) per channel).
 
-**IPFS Web UI:** \
+## IPFS Web UI
 IPFS's web UI] is *not* included within IPFS's Docker image because it's downloaded on first usage by IPFS using the public global IPFS network. As such, the web UI is not available by default when using a *private network*. Since the latest version is also hosted at [webui.ipfs.io](https://webui.ipfs.io), we can utilize it instead. Note that this requires [exposing the IPFS peers' API socket and allowing cross-origin (CORS) requests](https://github.com/ipfs/ipfs-webui/tree/v2.13.0#configure-ipfs-api-cors-headers), for example:
 ```
 docker exec peer1.pnet0.orga.ipfs.localhost ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://localhost:3000", "https://webui.ipfs.io", "http://127.0.0.1:5001"]'
