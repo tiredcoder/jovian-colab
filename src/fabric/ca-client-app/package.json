@@ -22,7 +22,7 @@
   "dependencies": {
     "fabric-ca-client": "2.2.11",
     "fabric-network": "2.2.11",
-    "js-yaml": "4.1.0",
-    "minimist": "1.2.6"
+    "js-yaml": "^4.1.0",
+    "minimist": "^1.2.6"
   }
 }

@@ -5,16 +5,17 @@
 version: "3.7"
 
 
-# A single (layer 3 / IP) network is used to provide the private IPFS network(s) ('pnet0' and 'pnet1'), IPFS cluster traffic, and IPFS' (REST) APIs.
+# A single (layer 3 / IP) network is used to provide the private IPFS network(s) ('pnet0' and 'pnet1'), IPFS cluster traffic, and IPFS' APIs.
 # Advanced (production) network topologies are not accounted for in this demo.
 networks:
   demo:
-    name: "${DEMO_NETWORK_NAME}"
+    external:
+      name: "${DEMO_NETWORK_NAME}"
 
 
 # IPFS peer service template
 x-ipfs-peer: &default-ipfs-peer
-  build: # Own IPFS image with private network bootstrap and mDNS toggle support
+  build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
     context: ./peer-image/
     dockerfile: ipfs-peer.dockerfile
     args:
@@ -38,7 +39,10 @@ x-ipfs-cluster: &default-ipfs-cluster
     - demo
   environment: &env-default-ipfs-cluster
     CLUSTER_CRDT_TRUSTEDPEERS: '*' # Trust all peers in cluster
-    CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose Cluster API
+    CLUSTER_PINSVCAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9097 # Expose Pinning Services API (experimental since v1.0.0)
+    CLUSTER_PINSVCAPI_CORSALLOWEDMETHODS: 'GET,POST' # Allow adding of pins
+    CLUSTER_PINSVCAPI_SSLCERTFILE: /data/crypto-config/pinsvcapi.crt # TLS certificate
+    CLUSTER_PINSVCAPI_SSLKEYFILE: /data/crypto-config/pinsvcapi.key # TLS key
     CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
     CLUSTER_METRICS_ENABLESTATS: 'true' # Enable metrics gathering via Prometheus
     CLUSTER_METRICS_PROMETHEUSENDPOINT: '/ip4/0.0.0.0/tcp/8888' # Set Prometheus endpoint to listen on all interfaces
@@ -52,7 +56,7 @@ services:
     container_name: peer0.pnet0.orga.ipfs.localhost
     hostname: peer0.pnet0.orga.ipfs.localhost
     volumes:
-      - ./ipfs-data/orga/pnet0/peer0:/data/ipfs
+      - ../ipfs-data/orga/pnet0/peer0:/data/ipfs
   cluster0.pnet0.orga.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster0.pnet0.orga.ipfs.localhost
@@ -64,18 +68,18 @@ services:
       CLUSTER_PEERNAME: cluster0.pnet0.orga.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGA_PNET0_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet0.orga.ipfs.localhost/tcp/5001
-    ports:
-      - "${IPFS_ORGA_PNET0_CLUSTER0_API_SOCKET}:9094" # Open Cluster API port (allows ipfs-cluster-ctl usage on Docker host)
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGA_PNET0_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orga/pnet0/cluster0:/data/ipfs-cluster
+      - ../ipfs-data/orga/pnet0/cluster0:/data/ipfs-cluster
+      - ../crypto-config/orga/pnet0/cluster0:/data/crypto-config:ro
   peer1.pnet0.orga.ipfs.localhost:
     <<: *default-ipfs-peer
     container_name: peer1.pnet0.orga.ipfs.localhost
     hostname: peer1.pnet0.orga.ipfs.localhost
     ports:
-      - "${IPFS_ORGA_PNET0_PEER1_API_SOCKET}:5001" # Open Peer API port (allows webui usage on Docker host)
+      - "${IPFS_ORGA_PNET0_PEER1_API_SOCKET}:5001" # Open Peer API RPC port (allows Web UI usage on Docker host)
     volumes:
-      - ./ipfs-data/orga/pnet0/peer1:/data/ipfs
+      - ../ipfs-data/orga/pnet0/peer1:/data/ipfs
   cluster1.pnet0.orga.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster1.pnet0.orga.ipfs.localhost
@@ -87,8 +91,10 @@ services:
       CLUSTER_PEERNAME: cluster1.pnet0.orga.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGA_PNET0_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet0.orga.ipfs.localhost/tcp/5001
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGA_PNET0_PINSVCAPI_BASIC_AUTH} # Enable HTTP Basic Authentication on the Pinning Services API
     volumes:
-      - ./ipfs-data/orga/pnet0/cluster1:/data/ipfs-cluster
+      - ../ipfs-data/orga/pnet0/cluster1:/data/ipfs-cluster
+      - ../crypto-config/orga/pnet0/cluster1:/data/crypto-config:ro
     networks:
       - demo
 
@@ -100,7 +106,7 @@ services:
     container_name: peer0.pnet0.orgb.ipfs.localhost
     hostname: peer0.pnet0.orgb.ipfs.localhost
     volumes:
-      - ./ipfs-data/orgb/pnet0/peer0:/data/ipfs
+      - ../ipfs-data/orgb/pnet0/peer0:/data/ipfs
   cluster0.pnet0.orgb.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster0.pnet0.orgb.ipfs.localhost
@@ -112,10 +118,10 @@ services:
       CLUSTER_PEERNAME: cluster0.pnet0.orgb.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGB_PNET0_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet0.orgb.ipfs.localhost/tcp/5001
-    ports:
-      - "${IPFS_ORGB_PNET0_CLUSTER0_API_SOCKET}:9094"
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGB_PNET0_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orgb/pnet0/cluster0:/data/ipfs-cluster
+      - ../ipfs-data/orgb/pnet0/cluster0:/data/ipfs-cluster
+      - ../crypto-config/orgb/pnet0/cluster0:/data/crypto-config:ro
   peer1.pnet0.orgb.ipfs.localhost:
     <<: *default-ipfs-peer
     container_name: peer1.pnet0.orgb.ipfs.localhost
@@ -123,7 +129,7 @@ services:
     ports:
       - "${IPFS_ORGB_PNET0_PEER1_API_SOCKET}:5001"
     volumes:
-      - ./ipfs-data/orgb/pnet0/peer1:/data/ipfs
+      - ../ipfs-data/orgb/pnet0/peer1:/data/ipfs
   cluster1.pnet0.orgb.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster1.pnet0.orgb.ipfs.localhost
@@ -135,8 +141,10 @@ services:
       CLUSTER_PEERNAME: cluster1.pnet0.orgb.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGB_PNET0_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet0.orgb.ipfs.localhost/tcp/5001
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGB_PNET0_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orgb/pnet0/cluster1:/data/ipfs-cluster
+      - ../ipfs-data/orgb/pnet0/cluster1:/data/ipfs-cluster
+      - ../crypto-config/orgb/pnet0/cluster1:/data/crypto-config:ro
   # pnet1
   peer0.pnet1.orgb.ipfs.localhost:
     <<: *default-ipfs-peer
@@ -147,7 +155,7 @@ services:
       IPFS_PNET_BOOTSTRAP_PEERS: ${IPFS_PNET1_BOOTSTRAP_PEERS}
       IPFS_SWARM_KEY: ${IPFS_PNET1_SWARM_KEY}
     volumes:
-      - ./ipfs-data/orgb/pnet1/peer0:/data/ipfs
+      - ../ipfs-data/orgb/pnet1/peer0:/data/ipfs
   cluster0.pnet1.orgb.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster0.pnet1.orgb.ipfs.localhost
@@ -159,10 +167,10 @@ services:
       CLUSTER_PEERNAME: cluster0.pnet1.orgb.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGB_PNET1_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet1.orgb.ipfs.localhost/tcp/5001
-    ports:
-      - "${IPFS_ORGB_PNET1_CLUSTER0_API_SOCKET}:9094"
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGB_PNET1_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orgb/pnet1/cluster0:/data/ipfs-cluster
+      - ../ipfs-data/orgb/pnet1/cluster0:/data/ipfs-cluster
+      - ../crypto-config/orgb/pnet1/cluster0:/data/crypto-config:ro
   peer1.pnet1.orgb.ipfs.localhost:
     <<: *default-ipfs-peer
     container_name: peer1.pnet1.orgb.ipfs.localhost
@@ -174,7 +182,7 @@ services:
     ports:
       - "${IPFS_ORGB_PNET1_PEER1_API_SOCKET}:5001"
     volumes:
-      - ./ipfs-data/orgb/pnet1/peer1:/data/ipfs
+      - ../ipfs-data/orgb/pnet1/peer1:/data/ipfs
   cluster1.pnet1.orgb.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster1.pnet1.orgb.ipfs.localhost
@@ -186,8 +194,10 @@ services:
       CLUSTER_PEERNAME: cluster1.pnet1.orgb.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGB_PNET1_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet1.orgb.ipfs.localhost/tcp/5001
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGB_PNET1_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orgb/pnet1/cluster1:/data/ipfs-cluster
+      - ../ipfs-data/orgb/pnet1/cluster1:/data/ipfs-cluster
+      - ../crypto-config/orgb/pnet1/cluster1:/data/crypto-config:ro
 
   # Organization C
   # 1 private IPFS network (pnet0) - 1 cluster - 2 peers - 2 cluster sidecars
@@ -196,7 +206,7 @@ services:
     container_name: peer0.pnet0.orgc.ipfs.localhost
     hostname: peer0.pnet0.orgc.ipfs.localhost
     volumes:
-      - ./ipfs-data/orgc/pnet0/peer0:/data/ipfs
+      - ../ipfs-data/orgc/pnet0/peer0:/data/ipfs
   cluster0.pnet0.orgc.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster0.pnet0.orgc.ipfs.localhost
@@ -208,10 +218,10 @@ services:
       CLUSTER_PEERNAME: cluster0.pnet0.orgc.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGC_PNET0_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer0.pnet0.orgc.ipfs.localhost/tcp/5001
-    ports:
-      - "${IPFS_ORGC_PNET0_CLUSTER0_API_SOCKET}:9094"
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGC_PNET0_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orgc/pnet0/cluster0:/data/ipfs-cluster
+      - ../ipfs-data/orgc/pnet0/cluster0:/data/ipfs-cluster
+      - ../crypto-config/orgc/pnet0/cluster0:/data/crypto-config:ro
   peer1.pnet0.orgc.ipfs.localhost:      
     <<: *default-ipfs-peer
     container_name: peer1.pnet0.orgc.ipfs.localhost
@@ -219,7 +229,7 @@ services:
     ports:
       - "${IPFS_ORGC_PNET0_PEER1_API_SOCKET}:5001"
     volumes:
-      - ./ipfs-data/orgc/pnet0/peer1:/data/ipfs
+      - ../ipfs-data/orgc/pnet0/peer1:/data/ipfs
   cluster1.pnet0.orgc.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster1.pnet0.orgc.ipfs.localhost
@@ -231,5 +241,7 @@ services:
       CLUSTER_PEERNAME: cluster1.pnet0.orgc.ipfs.localhost
       CLUSTER_SECRET: ${IPFS_ORGC_PNET0_CLUSTER_SECRET}
       CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/peer1.pnet0.orgc.ipfs.localhost/tcp/5001
+      CLUSTER_PINSVCAPI_BASICAUTHCREDENTIALS: ${IPFS_ORGC_PNET0_PINSVCAPI_BASIC_AUTH}
     volumes:
-      - ./ipfs-data/orgc/pnet0/cluster1:/data/ipfs-cluster
+      - ../ipfs-data/orgc/pnet0/cluster1:/data/ipfs-cluster
+      - ../crypto-config/orgc/pnet0/cluster1:/data/crypto-config:ro

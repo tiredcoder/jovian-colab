@@ -1,0 +1,37 @@
+{
+  "name": "jc-fabricgw-client",
+  "version": "1.0.0",
+  "description": "Client app for Fabric using the Gateway",
+  "keywords": [
+    "Hyperledger Fabric"
+  ],
+  "license": "Apache-2.0",
+  "author": "Rik Janssen",
+  "private": true,
+  "main": "lib/client.js",
+  "typings": "lib/client.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=14",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.6.7",
+    "@hyperledger/fabric-gateway": "1.0.1",
+    "@types/js-yaml": "^4.0.5",
+    "@types/minimist": "^1.2.2",
+    "fabric-ca-client": "2.2.11",
+    "fabric-network": "2.2.11",
+    "minimist": "^1.2.6",
+    "yaml": "^2.1.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.1",
+    "typescript": "~4.5.2"
+  }
+}

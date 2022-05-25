@@ -1,0 +1,30 @@
+description: Fabric Gateway Client Config (This is our own format and not the same as a Fabric connection profile!)
+version: 1.0.0
+defaultOrg: orgA
+organizations:
+  orgA:
+    mspid: MSPorgA
+    identity: janssen
+    certificateAuthority: ca.orga.fabric.localhost
+    gateway: peer0.orga.fabric.localhost
+identities:
+  janssen:
+    key:
+      path: ./id/janssen.key
+    cert:
+      path: ./id/janssen.crt
+gateways:
+  peer0.orga.fabric.localhost:
+    url: peer0.orga.fabric.localhost:7051
+    tlsCACerts:
+      path: ../crypto-config/fabric/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer0.orga.fabric.localhost
+certificateAuthorities:
+  ca.orga.fabric.localhost:
+    url: https://ca.orga.fabric.localhost:7054
+    caName: ca.orga.fabric.localhost
+    tlsCACerts:
+      path: ../crypto-config/fabric/peerOrganizations/orga.fabric.localhost/ca/ca.orga.fabric.localhost-cert.pem
+    httpOptions:
+      verify: false

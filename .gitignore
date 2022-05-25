@@ -3,6 +3,9 @@
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
+# Generated crypto material (IPFS and Fabric)
+crypto-config
+
 # Fabric
 genesisblock
 *.tx
@@ -16,6 +19,9 @@ tlscacerts
 # IPython
 profile_default/
 ipython_config.py
+
+# Python egg
+*.egg-info
 
 # Logs
 logs

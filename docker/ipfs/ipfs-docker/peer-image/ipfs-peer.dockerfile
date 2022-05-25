@@ -1,4 +1,4 @@
-# IPFS Peer Container Image With Private Network Bootstrapping and mDNS toggle support
+# IPFS Peer Container Image With Private Network Bootstrapping, mDNS toggle, and AutoRelay toggle support
 
 # Default image
 ARG IPFS_VERSION="v0.11.0"

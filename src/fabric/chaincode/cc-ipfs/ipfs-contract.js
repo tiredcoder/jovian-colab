@@ -34,8 +34,8 @@ class IPFSContract extends Contract {
     this.clientCert = new X509Certificate(this.clientId.getIDBytes());
     this.clientCertCN = this.clientCert.subject.split('\n').filter(cn => cn.includes('CN=')).toString().slice(3);
 
-    console.log(`clientMSPId: ${this.clientMSPId}`);
-    console.log(`clientCertCN: ${this.clientCertCN}`);
+    //console.log(`clientMSPId: ${this.clientMSPId}`);
+    //console.log(`clientCertCN: ${this.clientCertCN}`);
   }
 
   // Verify if the network or data with the given ID exists in world state
@@ -47,6 +47,9 @@ class IPFSContract extends Contract {
   /*
    * !!! IPFS networks !!!
    */
+
+  //add: networks: name, key, bootstrapnodes, acl
+
 
   // Verify if the user has the 'IPFS' attribute set in their certificate
   async checkUserIPFS() {
@@ -62,9 +65,9 @@ class IPFSContract extends Contract {
   // Add an IPFS network description
   async addNetwork(ctx, id, bootstrapNodes, netKey, acl) {
     // Only admins can add IPFS network descriptions
-    if (!this.clientCert.subject.includes('OU=admin')) {
-      throw new Error(`Only admins can add IPFS network descriptions.`);
-    }
+    //if (!this.clientCert.subject.includes('OU=admin')) {
+    //  throw new Error(`Only admins can add IPFS network descriptions.`);
+    //}
 
     // Verify existence
     const exists = await this.checkElementExists(ctx, id);

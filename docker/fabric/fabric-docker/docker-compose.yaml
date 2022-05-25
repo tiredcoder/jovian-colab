@@ -4,7 +4,7 @@
 # See the '.env' file for the variables
 version: "3.7"
 
-# One network is used to provide inter-org Fabric communication, for accessing the IPFS APIs, and for exposing the Hyperledger Fabric Gateway(s). This network is created by the IPFS compose file.
+# One network is used to provide inter-org Fabric communication, for accessing the IPFS APIs, and for exposing the Hyperledger Fabric Gateway(s).
 networks:
   demo:
     external:

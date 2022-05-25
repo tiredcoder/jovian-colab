@@ -2,6 +2,7 @@
 # ! MODIFIED BY RIK JANSSEN: !
 #   - Added private network support
 #   - Added mDNS toggle support
+#   - Added AutoRelay toggle support
 # Upstream: https://github.com/ipfs/go-ipfs/blob/v0.11.0/bin/container_daemon
 set -e
 user=ipfs
@@ -58,16 +59,27 @@ else
 fi
 
 # Toggle multicast DNS peer discovery (default is true)
-# https://docs.ipfs.io/how-to/configure-node/#discovery-mdns-enabled
+# https://github.com/ipfs/ipfs-docs/blob/6a961afbe4c5978e6c5cbdb7d0b27502953b79d5/docs/how-to/configure-node.md#discovery
 if [ ! -z "$IPFS_MDNS" ]; then
-  if [ "$IPFS_MDNS" = "false" ] || [ "$IPFS_MDNS" = "0" ]; then
+  if [ "$IPFS_MDNS" = "false" ] || [ "$IPFS_MDNS" = "0" ] || [ "$IPFS_MDNS" = "no" ; then
     echo "Disabling multicast DNS peer discovery..."
     ipfs config --bool Discovery.MDNS.Enabled 0
   fi
 fi
 
+# Toggle AutoRelay (default is false)
+# https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/experimental-features.md#autorelay
+# https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/config.md#swarmrelayclient
+# https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/config.md#swarmrelayservice
+if [ ! -z "$IPFS_AUTORELAY" ]; then
+  if [ "$IPFS_AUTORELAY" = "true" || [ "$IPFS_AUTORELAY" = "1" ] || [ "$IPFS_AUTORELAY" = "yes" ]; then
+    echo "Enabling AutoRelay client..."
+    ipfs config --json Swarm.RelayClient.Enabled true
+  fi
+fi
+
 # Bootstrap Private Network
-# https://docs.ipfs.io/how-to/modify-bootstrap-list/
+# https://github.com/ipfs/ipfs-docs/blob/d0462921172e425572ad1c0a9189a409bbe3c363/docs/how-to/modify-bootstrap-list.md
 # We have to add the bootstrap nodes' peer ID to *all* the nodes in the private network
 # if 'init' is set: get peer ID and exit (this node will be used as a bootstrap node)
 # if client via JupyterLab: get list of bootstrap nodes for private network via Fabric

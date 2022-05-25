@@ -42,11 +42,17 @@ docker exec peer1.pnet0.orga.ipfs.localhost ipfs config --json API.HTTPHeaders.A
 docker exec peer1.pnet0.orga.ipfs.localhost ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST"]'
 docker restart peer1.pnet0.orga.ipfs.localhost
 ```
+Furthermore, it might be needed to refresh the page if pointing the Web UI to a different API address. Finally, note that the Web UI is *not* a one-on-one copy of the CLI or HTTP RPC API. Namely, pins and files are managed differently. E.g. importing a file via the Web UI does *not* merely create a pin for the file/CID itself, and neither does a file added via the HTTP API show up in the Web UI. As such, it's not recommended to use the Web UI and other client applications side-by-side. I.e. the Web UI is used for troubleshooting only.
 
 ## Optional: access the Web UIs via remote using an SSH tunnel (i.e. if you are not running Docker on your local system)
 ```
 ssh <user>@<dockerhost> -L 127.0.0.1:7001:127.0.0.1:7001 -L 127.0.0.1:7002:127.0.0.1:7002 -L 127.0.0.1:7003:127.0.0.1:7003 -L 127.0.0.1:7004:127.0.0.1:7004
 ```
+And if you want to use the IPFS Web UI from a remote location (i.e. your laptop, with the IPFS infrastructure running on your Docker server):
+```
+ssh <user>@<dockerhost> -L 127.0.0.1:5000:127.0.0.1:5000 -L 127.0.0.1:5001:127.0.0.1:5001 -L 127.0.0.1:5002:127.0.0.1:5002 -L 127.0.0.1:5003:127.0.0.1:5003
+```
+These four tunneled endpoints will provide access to the second peer (peer1.<pnet>.<org>.ipfs.localhost) of each organization.
 
 ## Cleanup
 ```

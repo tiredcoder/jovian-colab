@@ -34,7 +34,7 @@ async function enrollAdmin(wallet, adminUsername, connectionProfileFile, organiz
     }
 
     // Load the network configuration
-    let connectionProfile = yaml.safeLoad(fs.readFileSync(connectionProfileFile, 'utf8'));
+    let connectionProfile = yaml.load(fs.readFileSync(connectionProfileFile, 'utf8'));
 
     // Create a new CA client for interacting with the CA
     try {
@@ -105,7 +105,7 @@ async function registerUser(wallet, adminUsername, connectionProfileFile, organi
     const adminUser = await provider.getUserContext(adminIdentity, adminUsername);
 
     // Load the network configuration
-    let connectionProfile = yaml.safeLoad(fs.readFileSync(connectionProfileFile, 'utf8'));
+    let connectionProfile = yaml.load(fs.readFileSync(connectionProfileFile, 'utf8'));
 
     // Create a new CA client for interacting with the CA
     try {

@@ -21,7 +21,7 @@ The infrastructure consists of the software mentioned in the table below. We use
 
 | Software                                           | Version                                                                   |
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
-| Ubuntu Server                                      | [20.04.4 LTS](https://releases.ubuntu.com/20.04/)                           |
+| Ubuntu Server                                      | [20.04.4 LTS](https://releases.ubuntu.com/20.04/)                         |
 | Docker                                             | [20.10.14](https://docs.docker.com/engine)                                |
 | Docker Compose                                     | [1.29.2](https://docs.docker.com/compose)                                 |
 | IPFS Peer                                          | [0.11.0](https://github.com/ipfs/go-ipfs/tree/v0.11.0)                    |
@@ -45,31 +45,32 @@ The Hyperledger Fabric Node.js SDKs require different versions:
 As per the [documentation](https://github.com/hyperledger/fabric/blob/8a4c7f3bdb17c18fe6c56ff7e3e2fc008e223005/docs/source/sdk_chaincode.md#fabric-contract-apis-and-application-apis), we use the client SDK (legacy) for CA administrative actions and the Gateway SDK as the actual client (i.e. JupyterLab).
 
 ## Internal Endpoints Overview
-The following network sockets are used *within* the created virtual infrastructure. These endpoints are *not* reachable from the Docker host / outside.
+The following network sockets are used *within* the created virtual infrastructure (by the relevant containers). These endpoints are *not* reachable from the Docker host / outside.
 
-| Component(s)                     | Endpoint |
-| -------------------------------- | -------- |
-| IPFS libp2p swarm                | TCP 4001 |
-| IPFS Peer API (daemon/rw access) | TCP 5001 |
-| IPFS Cluster HTTP API            | TCP 9094 |
-| IPFS Cluster swarm               | TCP 9096 |
-| IPFS Cluster Prometheus Metrics  | TCP 8888 |
-| Fabric CA HTTP API               | TCP 7054 |
-| Fabric Orderer                   | TCP 7050 |
-| Fabric Peer: listen and gossip   | TCP 7051 |
-| Fabric Peer: chaincode listen    | TCP 7052 |
-| Fabric Prometheus Metrics        | TCP 9443 |
-| Node exporter Prometheus Metrics | TCP 9100 |
-| cAdvisor Web UI and metrics      | TCP 8080 |
-| Prometheus Web UI and metrics    | TCP 9090 |
-| Grafana Web UI                   | TCP 3000 |
-| Hyperledger Explorer Web UI      | TCP 8080 |
-| JupyterLab Notebook Web UI       | TCP 8888 |
+| Component(s)                                                       | Endpoint |
+| ------------------------------------------------------------------ | -------- |
+| IPFS libp2p swarm                                                  | TCP 4001 |
+| IPFS Peer RPC API (daemon/rw access, including Prometheus metrics) | TCP 5001 |
+| IPFS Cluster HTTP REST API                                         | TCP 9094 |
+| IPFS Pinning Services API                                          | TCP 9097 |
+| IPFS Cluster swarm                                                 | TCP 9096 |
+| IPFS Cluster Prometheus Metrics                                    | TCP 8888 |
+| Fabric CA HTTP API                                                 | TCP 7054 |
+| Fabric Orderer                                                     | TCP 7050 |
+| Fabric Peer: listen and gossip                                     | TCP 7051 |
+| Fabric Peer: chaincode listen                                      | TCP 7052 |
+| Fabric Prometheus Metrics                                          | TCP 9443 |
+| Node exporter Prometheus Metrics                                   | TCP 9100 |
+| cAdvisor Web UI and metrics                                        | TCP 8080 |
+| Prometheus Web UI and metrics                                      | TCP 9090 |
+| Grafana Web UI                                                     | TCP 3000 |
+| Hyperledger Explorer Web UI                                        | TCP 8080 |
+| JupyterLab Notebook Web UI                                         | TCP 8888 |
+| External/Second JupyterLab Notebook Web UI                         | TCP 8889 |
 
 ## Docker Host Network Bindings
 The following network sockets are used on the Docker host machine (configured via the .env files). We use these network bindings to selectively expose the container endpoints (see above) to the Docker host machine.
  - IPFS peer APIs (IPFS Web UI access): 127.0.0.1:5000 - 127.0.0.1:5003
- - IPFS cluster HTTP APIs: 127.0.0.1:6000 - 127.0.0.1:6003
  - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
  - JupyterLab Notebook Web UI: 127.0.0.1:8888
 
@@ -90,19 +91,26 @@ Replace the newlines with '\n' (see the .env file for examples).
 
 **NOTICE:** Please follow the steps below in the correct order (we use multiple Docker Compose files which create containers in the same network).
 
+## Create Docker network
+We manually create a Docker network that is used by the entire infrastructure (note that the network's name is referred to in each .env file used by Docker Compose).
+```
+docker network create jovian-colab_demo-net
+```
+
 ## Boostrap IPFS
 We need to provide bootstrap nodes for each private IPFS network.
- 1. Launch the IPFS bootstrap nodes and note their peer ID:
-    cd ./ipfs 
-    docker-compose -f compose.ipfs-bootstrap.yml up
- 2. Add the bootstrap peer IDs in multiaddr format to the .env file (e.g. the multiaddr of organization A's peer0 for pnet0 is "/dns4/peer0.pnet0.orga.ipfs.localhost/tcp/4001/p2p/\<PEERID\>"). See the .env file for examples.
- 3. Destroy the bootstrap containers (the data/configurations will be preserved):
-    docker-compose -f compose.ipfs-bootstrap.yml down
+1. Launch the IPFS bootstrap nodes and note their peer ID:
+```
+cd ./ipfs
+./ipfs-docker.sh bootstrap
+```
+
+2. Add the bootstrap peer IDs in multiaddr format to the .env file (e.g. the multiaddr of organization A's peer0 for pnet0 is "/dns4/peer0.pnet0.orga.ipfs.localhost/tcp/4001/p2p/\<PEERID\>"). See the .env file for examples.
 
 ## Start IPFS
 (Make sure you bootstrapped IPFS first.)
 ```
-docker-compose up -d
+./ipfs-docker.sh up
 ```
 
 ## Start Fabric
@@ -111,7 +119,7 @@ cd ../fabric
 ./fabric-docker.sh up
 ```
 
-## Start JupyterLab (and an IPFS node client)
+## Start (server local) JupyterLab (and an IPFS node client)
 ```
 cd ../jupyter
 docker-compose up -d
@@ -124,6 +132,20 @@ docker-compose up -d
 ```
 ssh <user>@<dockerhost> -L 127.0.0.1:8888:127.0.0.1:8888
 ```
+
+## Start an external JupyterLab (and an IPFS node client)
+The JupypterLab instance above runs on the same server and has direct access to Fabric and IPFS (all containers are part of the same network). We will add another JupyterLab instance that's running on our local system.
+
+First, copy the crypto material from the server to the external JupyterLab host (i.e. your local system). Then launch JupyterLab and its local IPFS node.
+```
+(git clone this repo to your local system)
+cd jupyter-external
+docker-compose up -d
+```
+
+## Access JupyterLab from your web browser
+Note that we are using port 8889 as to prevent a possible collision when using the SSH tunnel above to access the Jupyterlab instance that's running on the server.
+[http://127.0.0.1:8889](http://127.0.0.1:8889)
 
 ## Verify that Docker is running
 ```
@@ -176,7 +198,8 @@ docker-compose down
 cd ../fabric
 ./fabric-docker.sh down
 cd ../ipfs
-docker-compose down
+./ipfs-docker.sh down
+docker network rm jovian-colab_demo-net
 ```
 
 ## Possibly remove the created Docker volumes
