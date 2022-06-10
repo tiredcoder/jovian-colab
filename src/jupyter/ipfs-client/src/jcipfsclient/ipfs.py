@@ -73,7 +73,7 @@ def joinNetwork(nodeApiUrl, nodeRepoPath, swarmKey, bootstrapNodes):
     
     # Restart the node to load the swarm key and join the private IPFS network
     # The actual restarting is done out of bounds (i.e. via Docker, Podman, a service manager like systemd, etc.)
-    IpfsHttpRpcRequestHandler(nodeApiUrl + '/api/v0/shutdown')
+    IpfsHttpRpcRequestHandler(nodeApiUrl + '/api/v0/shutdown', False)
   except Exception as e:
     print("Error while joining IPFS network: " + str(e), file=sys.stderr)
 

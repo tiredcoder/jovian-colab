@@ -27,6 +27,8 @@ services:
     volumes:
       - ../fabric-config/crypto-config/fabric-ca/organizations/orga.fabric.localhost:/etc/hyperledger/fabric-ca-server
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost:/etc/hyperledger/fabric-ca-client
+    ports:
+      - "${FABRIC_CA_ORGA_HTTP_SOCKET}:7054" # Allow access from remote JupyterLab (SSH tunnel)
     networks:
       - demo
 

@@ -24,10 +24,8 @@
     "@grpc/grpc-js": "^1.6.7",
     "@hyperledger/fabric-gateway": "1.0.1",
     "@types/js-yaml": "^4.0.5",
-    "@types/minimist": "^1.2.2",
     "fabric-ca-client": "2.2.11",
     "fabric-network": "2.2.11",
-    "minimist": "^1.2.6",
     "yaml": "^2.1.0"
   },
   "devDependencies": {

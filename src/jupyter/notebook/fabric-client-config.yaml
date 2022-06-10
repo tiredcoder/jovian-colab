@@ -4,15 +4,57 @@ defaultOrg: orgA
 organizations:
   orgA:
     mspid: MSPorgA
-    identity: janssen
+    identity: orgAuser
     certificateAuthority: ca.orga.fabric.localhost
     gateway: peer0.orga.fabric.localhost
+    channels:
+      - consortium-chain
+    defaultChannel: consortium-chain
+    defaultChaincode: consortium-cc-ipfs
+  orgB:
+    mspid: MSPorgB
+    identity: orgBuser
+    certificateAuthority: ca.orgb.fabric.localhost
+    gateway: peer0.orgb.fabric.localhost
+    channels:
+      - consortium-chain
+      - orgb-chain
+    defaultChannel: consortium-chain
+    defaultChaincode: consortium-cc-ipfs
+  orgC:
+    mspid: MSPorgC
+    identity: orgCuser
+    certificateAuthority: ca.orgc.fabric.localhost
+    gateway: peer0.orgc.fabric.localhost
+    channels:
+      - consortium-chain
+    defaultChannel: consortium-chain
+    defaultChaincode: consortium-cc-ipfs
 identities:
-  janssen:
+  orgAuser:
     key:
-      path: ./id/janssen.key
+      path: ./id/orgAuser.key
     cert:
-      path: ./id/janssen.crt
+      path: ./id/orgAuser.crt
+  orgBuser:
+    key:
+      path: ./id/orgBuser.key
+    cert:
+      path: ./id/orgBuser.crt
+  orgCuser:
+    key:
+      path: ./id/orgCuser.key
+    cert:
+      path: ./id/orgCuser.crt
+channels:
+  consortium-chain:
+    name: consortium-chain
+    chaincodes:
+      - consortium-cc-ipfs
+  orgb-chain:
+    name: orgb-chain
+    chaincodes:
+      - orgb-cc-ipfs
 gateways:
   peer0.orga.fabric.localhost:
     url: peer0.orga.fabric.localhost:7051
@@ -20,11 +62,37 @@ gateways:
       path: ../crypto-config/fabric/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer0.orga.fabric.localhost
+  peer0.orgb.fabric.localhost:
+    url: peer0.orgb.fabric.localhost:7051
+    tlsCACerts:
+      path: ../crypto-config/fabric/peerOrganizations/orgb.fabric.localhost/peers/peer0.orgb.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer0.orgb.fabric.localhost
+  peer0.orgc.fabric.localhost:
+    url: peer0.orgc.fabric.localhost:7051
+    tlsCACerts:
+      path: ../crypto-config/fabric/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/tls/ca.crt
+    grpcOptions:
+      ssl-target-name-override: peer0.orgc.fabric.localhost
 certificateAuthorities:
   ca.orga.fabric.localhost:
     url: https://ca.orga.fabric.localhost:7054
     caName: ca.orga.fabric.localhost
     tlsCACerts:
       path: ../crypto-config/fabric/peerOrganizations/orga.fabric.localhost/ca/ca.orga.fabric.localhost-cert.pem
+    httpOptions:
+      verify: false
+  ca.orgb.fabric.localhost:
+    url: https://ca.orgb.fabric.localhost:7054
+    caName: ca.orgb.fabric.localhost
+    tlsCACerts:
+      path: ../crypto-config/fabric/peerOrganizations/orgb.fabric.localhost/ca/ca.orgb.fabric.localhost-cert.pem
+    httpOptions:
+      verify: false
+  ca.orgc.fabric.localhost:
+    url: https://ca.orgc.fabric.localhost:7054
+    caName: ca.orgc.fabric.localhost
+    tlsCACerts:
+      path: ../crypto-config/fabric/peerOrganizations/orgc.fabric.localhost/ca/ca.orgc.fabric.localhost-cert.pem
     httpOptions:
       verify: false

@@ -135,6 +135,8 @@ services:
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
       - ../fabric-config/config:/etc/hyperledger/fabric/config
+    ports:
+      - "${FABRIC_ORGA_PEER0_SOCKET}:7051" # Allow access from remote JupyterLab (SSH tunnel)
     networks:
       - demo
 

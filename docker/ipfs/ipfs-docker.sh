@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-#
-# 
-#
 set -e
 IPFS_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
 

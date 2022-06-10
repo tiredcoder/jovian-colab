@@ -108,7 +108,7 @@ case "$ACTION" in
     chaincodeStart
     ;;
   "invoke")
-    CC_INVOKE_DEFAULT_ARGS='{"Args":["addNetwork","net1","boot","key","acl"]}'
+    CC_INVOKE_DEFAULT_ARGS='{"Args":["createNetwork","net1","boot","key","pin","acl"]}'
     CC_INVOKE_ARGS="${2:-$CC_INVOKE_DEFAULT_ARGS}"
     CHAINCODE_DIR="$(readlink -f ${3:-$SCRIPT_DIR/../../src/fabric/chaincode/cc-ipfs})"
     chaincodeInvoke

@@ -18,21 +18,29 @@ import YAML from 'yaml';
 import FabricCAServices from 'fabric-ca-client';
 import * as grpc from '@grpc/grpc-js';
 import * as crypto from 'crypto';
-import { connect, Identity, Signer, signers } from '@hyperledger/fabric-gateway';
+import { Gateway, Network, connect, Contract, Identity, Signer, signers } from '@hyperledger/fabric-gateway';
 import { TextDecoder } from 'util';
 
 interface config {
   organization: string;
   mspId: string;
   identity: string;
-  idCertFile: string,
-  idKeyFile: string,
+  idCertFile: string;
+  idKeyFile: string;
   caEndpoint: string;
   caTlsCertFile: string;
   caName: string;
   gatewayEndpoint: string;
   gatewayTlsCertFile: string;
   gatewayHostAlias: string;
+  channel: string;
+  chaincode: string;
+}
+
+interface connectionDetails {
+  gRpcClient: grpc.Client;
+  gateway: Gateway;
+  contract: Contract;
 }
 
 function EnvOrConfigOrError(envVariableName: string, configFileValue: string): string {
@@ -65,10 +73,12 @@ const parseConfig = async (configFile?: string, organization?: string): Promise<
       caName: EnvOrConfigOrError('FABRIC_CA_NAME', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].caName : undefined),
       gatewayEndpoint: EnvOrConfigOrError('FABRIC_GATEWAY', content ? content.gateways[content.organizations[org].gateway].url : undefined),
       gatewayTlsCertFile: EnvOrConfigOrError('FABRIC_GATEWAY_CERT', content ? content.gateways[content.organizations[org].gateway].tlsCACerts.path : undefined),
-      gatewayHostAlias: EnvOrConfigOrError('FABRIC_GATEWAY_HOST_ALIAS', content ? content.gateways[content.organizations[org].gateway].grpcOptions['ssl-target-name-override'] : undefined)
+      gatewayHostAlias: EnvOrConfigOrError('FABRIC_GATEWAY_HOST_ALIAS', content ? content.gateways[content.organizations[org].gateway].grpcOptions['ssl-target-name-override'] : undefined),
+      channel: EnvOrConfigOrError('FABRIC_CHANNEL', content ? content.organizations[org].defaultChannel : undefined),
+      chaincode: EnvOrConfigOrError('FABRIC_CHAINCODE', content ? content.organizations[org].defaultChaincode : undefined)
     }
     return config;
-  } catch(error) {
+  } catch (error) {
     throw new Error(`Config error: ${error}`); 
   }
 }
@@ -110,11 +120,11 @@ const enroll = async (identity: string, idCertFile: string, idKeyFile: string, s
 }
 
 const newGrpcConnection = async (gatewayEndpoint: string, gatewayTlsCertFile: string, gatewayHostAlias: string): Promise<grpc.Client> => {
-    const tlsRootCert = await fsp.readFile(path.resolve(gatewayTlsCertFile));
-    const tlsCredentials = grpc.credentials.createSsl(tlsRootCert);
-    return new grpc.Client(gatewayEndpoint, tlsCredentials, {
-        'grpc.ssl_target_name_override': gatewayHostAlias,
-    });
+  const tlsRootCert = await fsp.readFile(path.resolve(gatewayTlsCertFile));
+  const tlsCredentials = grpc.credentials.createSsl(tlsRootCert);
+  return new grpc.Client(gatewayEndpoint, tlsCredentials, {
+      'grpc.ssl_target_name_override': gatewayHostAlias,
+  });
 }
 
 const createGatewayIdentity = async (mspId: string, idCertFile: string): Promise<Identity> => {
@@ -128,31 +138,7 @@ const createGatewaySigner = async (idKeyFile: string): Promise<Signer> => {
   return signers.newPrivateKeySigner(privateKey);
 }
 
-const gatewayExec = async (client: grpc.Client, identity: Identity, signer: Signer, channel: string, chaincode: string): Promise<void> => {
-  // Connect to the gateway
-  const gateway = connect({identity, signer, client});
-
-  // Interact with the chaincode
-  try {
-    const network = gateway.getNetwork(channel);
-    const contract = network.getContract(chaincode);
-    const utf8Decoder = new TextDecoder();
-
-    // Put
-    //const putResult = await contract.submitTransaction('addNetwork', 'net1', 'dns1;dns2', 'key', 'acl');
-    //console.log('Put result:', utf8Decoder.decode(putResult));
-    
-    // Get
-    const getResult = await contract.evaluateTransaction('getNetwork', 'net1');
-    console.log('Get result:', utf8Decoder.decode(getResult));
-  } catch (error) {
-    console.error(`Fabric Gateway error : ${error}`);
-  } finally {
-    gateway.close();
-  }
-}
-
-async function getConfig(configFile: string, organization: string): Promise<config> {
+const getConfig = async (configFile: string, organization: string): Promise<config> => {
   // Parse config (from environment vars or file)
   const config: config = configFile ?
     (organization ?
@@ -169,32 +155,147 @@ async function getConfig(configFile: string, organization: string): Promise<conf
   return config;
 }
 
-async function execEnroll(config: config, secret: string): Promise<void> {
+const execEnroll = async (config: config, secret: string): Promise<void> => {
   console.log(' Enrolling... ');
   await enroll(config.identity, config.idCertFile, config.idKeyFile, secret, config.caEndpoint, [config.caTlsCertFile], config.caName);
   console.log('Enrollment complete!');
 }
 
-async function execTransaction(config: config): Promise<void> {
-  console.log(' Gateway exec... ');
+const createConnection = async (config: config): Promise<connectionDetails> => {
+  try {
+    // Create gRPC connection
+    const gRpcClient: grpc.Client = await newGrpcConnection(config.gatewayEndpoint, config.gatewayTlsCertFile, config.gatewayHostAlias);
 
-  // Identity
-  const identity: Identity = await createGatewayIdentity(config.mspId, config.idCertFile);
-  const signer: Signer = await createGatewaySigner(config.idKeyFile);
+    // Identity
+    const identity: Identity = await createGatewayIdentity(config.mspId, config.idCertFile);
+    const signer: Signer = await createGatewaySigner(config.idKeyFile);
 
-  // Create gRPC connection
-  const gRpcClient: grpc.Client = await newGrpcConnection(config.gatewayEndpoint, config.gatewayTlsCertFile, config.gatewayHostAlias);
+    // Connect to the gateway
+    const gateway: Gateway = connect({identity, signer, client: gRpcClient});
+    
+    // Get the channel and chaincode
+    const network: Network = gateway.getNetwork(config.channel);
+    const contract: Contract = network.getContract(config.chaincode);
 
-  // Exec chaincode
-  await gatewayExec(gRpcClient, identity, signer, 'consortium-chain', 'consortium-cc-ipfs');
-  
+    // Return the connection details
+    const connectionDetails: connectionDetails = {
+      gRpcClient,
+      gateway,
+      contract
+    };
+    return connectionDetails;
+  } catch (error) {
+    throw new Error(`Connection creation error: ${error}`); 
+  }
+}
+
+const closeConnection = async (gateway: Gateway, gRpcClient: grpc.Client): Promise<void> => {
+  gateway.close();
   gRpcClient.close();
 }
 
-// DO: add all functions (get IPFS network, etc.) here for chaincode!
+
+// IPFS Chaincode funtions
+const createNetwork = async (contract: Contract, id: string, bootstrapNodes: string, netKey: string, pinningSvcs: string, acl: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.submitTransaction('createNetwork', id, bootstrapNodes, netKey, pinningSvcs, acl);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const listAllNetworks = async (contract: Contract, mspId: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('listAllNetworks', mspId);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const readNetwork = async (contract: Contract, key: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('readNetwork', key);  
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const deleteNetwork = async (contract: Contract, key: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('deleteNetwork', key);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const createData = async (contract: Contract, id: string, networkId: string, cid: string, cryptCipher: string, cryptKey: string, chunkSize: string, acl: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.submitTransaction('createData', id, networkId, cid, cryptCipher, cryptKey, chunkSize, acl);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const listAllData = async (contract: Contract, user: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('listAllData', user);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const readData = async (contract: Contract, key: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('readData', key);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
+const deleteData = async (contract: Contract, key: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('deleteData', key);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
+
 
 export {
   getConfig,
   execEnroll,
-  execTransaction
+  createConnection,
+  closeConnection,
+  createNetwork,
+  listAllNetworks,
+  readNetwork,
+  deleteNetwork,
+  createData,
+  listAllData,
+  readData,
+  deleteData
 }

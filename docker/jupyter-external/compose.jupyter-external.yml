@@ -2,11 +2,23 @@
 # See the '.env' file for the variables
 version: "3.7"
 
+
 # Note that Jupyterlab and the IPFS node need access to the private IPFS network(s) and the Hyperledger Fabric Gateway(s) on the *external* server (i.e. expose these services from the server to this external client; set up name resolution, firewall, TLS CAs, etc.).
 # We'll create the virtual network below to connect JupyterLab to its (local) IPFS node.
 networks:
   demo:
     name: ${DEMO_NETWORK_NAME}
+
+
+# Shared IPFS repository volume
+volumes:
+  ipfs-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: "./jupyter-data/ipfs"
+
 
 services:
   ipfs.jupyter-ext.localhost:
@@ -19,17 +31,18 @@ services:
     container_name: ipfs.jupyter-ext.localhost
     hostname: ipfs.jupyter-ext.localhost
     init: false # Image is already using 'tini' by default
-    restart: unless-stopped
+    restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
     volumes:
-      - ./jupyter-data/ipfs:/data/ipfs
+      - ipfs-data:/data/ipfs
     networks:
       - demo
     environment:
       LIBP2P_FORCE_PNET: 1 # Force usage of private IPFS network (we use a dummy config that doesn't work but does start the IPFS process; we'll get the actual config via fabric)
       IPFS_SWARM_KEY: "/key/swarm/psk/1.0.0/\n/base16/\nffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" # Dummy private IPFS network key
       IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
-      IPFS_AUTORELAY: 'true' # Enable AutoRelay (experimental NAT traversal)
-      LOGSPOUT: 'ignore'
+      IPFS_AUTORELAY: 'false' # Don't enable AutoRelay (experimental NAT traversal); we use an SSH 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   notebook.jupyter-ext.localhost:
     image: "${JUPYTERLAB_IMAGE}"
     container_name: notebook.jupyter-ext.localhost
@@ -41,7 +54,8 @@ services:
     ports:
       - "${JUPYTERLAB_HTTP_SOCKET}:8888" # Allow access to JupyterLab
     volumes:
-      - ../../src/jupyter/notebook:/home/jovyan/work/notebook
+      - ../../src/jupyter/notebook:/home/jovyan/work/notebook:ro
+      - ipfs-data:/home/jovyan/work/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
       - ./server-crypto-config:/home/jovyan/work/crypto-config:ro
     networks:
       - demo
@@ -49,4 +63,5 @@ services:
       JUPYTER_ENABLE_LAB: 'yes'
       RESTARTABLE: 'yes'
       NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False --ServerApp.trust_xheaders=True'
-      LOGSPOUT: 'ignore'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

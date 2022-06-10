@@ -1,6 +1,8 @@
 # Docker Compose Container Infrastructure: JupyterLab Notebook and IPFS (client) node/peer
+# Do *not* run this file directly (using Docker Compose)! Use the 'jupyter-docker.sh' script instead.
 # See the '.env' file for the variables
 version: "3.7"
+
 
 # Jupyterlab needs access to the private IPFS network(s) and the Hyperledger Fabric Gateway(s)
 # For convience, we'll also use this virtual network to connect JupyterLab to its IPFS node
@@ -9,22 +11,31 @@ networks:
     external:
       name: ${DEMO_NETWORK_NAME}
 
+
+# Shared IPFS repository volume per Docker compose project instance
+volumes:
+  ipfs-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: "../jupyter-data/ipfs/${COMPOSE_PROJECT_NAME}"
+
+
 services:
   ipfs.jupyter.localhost:
     build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
-      context: ../ipfs/ipfs-docker/peer-image/
+      context: ../../ipfs/ipfs-docker/peer-image/
       dockerfile: ipfs-peer.dockerfile
       args:
         IPFS_VERSION: "${IPFS_PEER_VERSION}"
     image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
-    container_name: ipfs.jupyter.localhost
-    hostname: ipfs.jupyter.localhost
+    container_name: "ipfs.jupyter-${INSTANCE}.localhost"
+    hostname: "ipfs.jupyter-${INSTANCE}.localhost"
     init: false # Image is already using 'tini' by default
-    restart: unless-stopped
-    ports:
-      - "${IPFS_API_SOCKET}:5001" # Open Peer API port (allows webui usage on Docker host)
+    restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
     volumes:
-      - ./jupyter-data/ipfs:/data/ipfs
+      - ipfs-data:/data/ipfs
     networks:
       - demo
     environment:
@@ -34,22 +45,21 @@ services:
       LOGSPOUT: 'ignore'
   notebook.jupyter.localhost:
     image: "${JUPYTERLAB_IMAGE}"
-    container_name: notebook.jupyter.localhost
-    hostname: notebook.jupyter.localhost
+    container_name: "notebook.jupyter-${INSTANCE}.localhost"
+    hostname: "notebook.jupyter-${INSTANCE}.localhost"
     user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
     group_add:
       - 100 # 'users' group in container (provides rw access to /opt/conda)
     init: false # Image is already using 'tini' by default
-    ports:
-      - "${JUPYTERLAB_HTTP_SOCKET}:8888" # Allow access to JupyterLab
     volumes:
-      - ../../src/jupyter/notebook:/home/jovyan/work/notebook
-      - ../fabric/fabric-config/crypto-config:/home/jovyan/work/crypto-config/fabric:ro
-      - ../ipfs/crypto-config:/home/jovyan/work/crypto-config/ipfs:ro
+      - ../../../src/jupyter/notebook:/home/jovyan/work/notebook:ro # Read-only access to the notebooks
+      - ipfs-data:/home/jovyan/work/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
+      - ../../fabric/fabric-config/crypto-config:/home/jovyan/work/crypto-config/fabric:ro
+      - ../../ipfs/crypto-config:/home/jovyan/work/crypto-config/ipfs:ro
     networks:
       - demo
     environment:
       JUPYTER_ENABLE_LAB: 'yes'
       RESTARTABLE: 'yes'
-      NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False --ServerApp.trust_xheaders=True'
+      NOTEBOOK_ARGS: "--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.allow_origin='*' --ServerApp.base_url=/notebook.jupyter-${INSTANCE}.localhost/"
       LOGSPOUT: 'ignore'
