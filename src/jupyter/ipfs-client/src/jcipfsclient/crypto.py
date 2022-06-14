@@ -16,7 +16,6 @@
 #  - To do / Future work: All three ciphers allow for parallelization (i.e. multi-threaded encryption/decryption).
 #
 # Docs: https://pycryptodome.readthedocs.io/en/v3.14.1/
-import requests
 import base64
 from Crypto.Cipher import ChaCha20, Salsa20, AES
 from Crypto.Random import get_random_bytes

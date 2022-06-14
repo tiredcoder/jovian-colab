@@ -52,7 +52,7 @@ And if you want to use the IPFS Web UI from a remote location (i.e. your laptop,
 ```
 ssh <user>@<dockerhost> -L 127.0.0.1:5000:127.0.0.1:5000 -L 127.0.0.1:5001:127.0.0.1:5001 -L 127.0.0.1:5002:127.0.0.1:5002 -L 127.0.0.1:5003:127.0.0.1:5003
 ```
-These four tunneled endpoints will provide access to the second peer (peer1.<pnet>.<org>.ipfs.localhost) of each organization.
+These four tunneled endpoints will provide access to the second peer (`peer1.<pnet>.<org>.ipfs.localhost`) of each organization.
 
 ## Cleanup
 ```

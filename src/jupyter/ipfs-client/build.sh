@@ -1,7 +1,7 @@
 #!/usr/bin/sh
 SCRIPT_DIR=$(dirname "$0")
 
-echo ' *** Building... *** '
+echo ' *** Building ipfs-client module... *** '
 rm -rf "$SCRIPT_DIR/dist"
 python3 -m pip install build
 python3 -m build "$SCRIPT_DIR"

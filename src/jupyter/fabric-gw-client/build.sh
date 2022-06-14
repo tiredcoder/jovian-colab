@@ -2,7 +2,7 @@
 SCRIPT_DIR=$(dirname "$0")
 DOCKER_IMAGE="node:14.18.3-alpine"
 
-echo " *** Building using $DOCKER_IMAGE Docker container... *** "
+echo " *** Building fabric-gw-client module using $DOCKER_IMAGE Docker container... *** "
 rm -rf "$SCRIPT_DIR/dist"
 mkdir "$SCRIPT_DIR/dist" "$SCRIPT_DIR/node_modules" "$SCRIPT_DIR/lib"
 CONTAINER="fabric-gw-client-builder"

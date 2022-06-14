@@ -6,7 +6,7 @@
 #
 set -e
 JUPYTER_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
-source "$JUPYTER_NETWORK_ROOT/jupyter-docker/.env" # Get COMPOSE_PROJECT_NAME
+source "$JUPYTER_NETWORK_ROOT/jupyter-docker/.env"
 
 proxyStart() {
   local INSTANCES="$1"
@@ -21,9 +21,33 @@ proxyStart() {
   docker run -d --name "nginx.jupyter.localhost" --network="${DEMO_NETWORK_NAME}" -p "${NGINX_HTTP_SOCKET}:8080" -v "${JUPYTER_NETWORK_ROOT}/jupyter-docker/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro" -v "${JUPYTER_NETWORK_ROOT}/jupyter-docker/nginx-snippet-proxy.conf:/etc/nginx/snippets/proxy.conf:ro" -e LOGSPOUT=ignore "${NGINX_IMAGE}" >/dev/null 2>&1
 }
 
+prerequisitesInstall() {
+  echo "Building client modules..."
+  (
+    cd "${JUPYTER_NETWORK_ROOT}/../../src/jupyter/fabric-gw-client" \
+    && ./build.sh \
+    && cp ./dist/*.tgz "${JUPYTER_NETWORK_ROOT}/jupyter-docker/jupyterlab-image/"
+  )
+
+  (
+    cd "${JUPYTER_NETWORK_ROOT}/../../src/jupyter/ipfs-client" \
+    && ./build.sh \
+    && cp ./dist/*.whl "${JUPYTER_NETWORK_ROOT}/jupyter-docker/jupyterlab-image/"
+  )
+
+  echo "Building JupyterLab container image..."
+  (
+    cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker \
+    && env INSTANCE='build' docker-compose build --no-cache notebook.jupyter.localhost \
+    && rm "${JUPYTER_NETWORK_ROOT}/jupyter-docker/jupyterlab-image/"*.{tgz,whl}
+  )
+}
+
 networkUp() {
   local INSTANCES="$1"
   echo "Starting $INSTANCES Jupyter network(s)..."
+
+  prerequisitesInstall
 
   for ((i=1;i<=INSTANCES;i++)); do
     echo "Creating directory hierarchy for the IPFS repositories..."
@@ -31,8 +55,11 @@ networkUp() {
     
     # Env vars given at docker-compose invoke supersede .env file (allowing us to set the project name for each instance)
     (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose up -d)
-  done
 
+    echo "Copying notebooks to local container storage for instance $i..."
+    docker exec -i "notebook.jupyter-$i.localhost" sh -c "mkdir /home/jovyan/work/local && cp -r /home/jovyan/work/notebook/* /home/jovyan/work/local/"
+  done
+  
   proxyStart "$INSTANCES"
 }
 
@@ -60,13 +87,15 @@ networkDown() {
   echo "Destroying Jupyter network(s) and removing the IPFS repositories..."
   local i=1
   while [ $(cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose -p "${COMPOSE_PROJECT_NAME}-$i" ps -q | wc -c) -ne 0 ]; do
-    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose down -v)
+    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose down)
     rm -rf "$JUPYTER_NETWORK_ROOT"/jupyter-data/ipfs/"${COMPOSE_PROJECT_NAME}-$i"
     ((i++))
   done
   echo "Removing reverse proxy..."
   docker stop nginx.jupyter.localhost >/dev/null 2>&1 && docker rm nginx.jupyter.localhost >/dev/null 2>&1
   rm "${JUPYTER_NETWORK_ROOT}/jupyter-docker/nginx-proxy.conf"
+  echo "Removing JupyterLab image..."
+  docker rmi "jc_demo_jupyterlab"
   echo "Done! Network was purged"
 }
 

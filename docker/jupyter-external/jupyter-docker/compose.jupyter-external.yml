@@ -3,27 +3,17 @@
 version: "3.7"
 
 
-# Note that Jupyterlab and the IPFS node need access to the private IPFS network(s) and the Hyperledger Fabric Gateway(s) on the *external* server (i.e. expose these services from the server to this external client; set up name resolution, firewall, TLS CAs, etc.).
-# We'll create the virtual network below to connect JupyterLab to its (local) IPFS node.
+# Note that Jupyterlab and the IPFS node need access to the private IPFS network(s) and the Hyperledger Fabric Gateway(s) on the *external* server.
+# We will create the virtual network below to connect JupyterLab to its (local) IPFS node.
 networks:
   demo:
     name: ${DEMO_NETWORK_NAME}
 
 
-# Shared IPFS repository volume
-volumes:
-  ipfs-data:
-    driver: local
-    driver_opts:
-      type: 'none'
-      o: 'bind'
-      device: "./jupyter-data/ipfs"
-
-
 services:
   ipfs.jupyter-ext.localhost:
     build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
-      context: ../ipfs/ipfs-docker/peer-image/
+      context: ../../ipfs/ipfs-docker/peer-image/
       dockerfile: ipfs-peer.dockerfile
       args:
         IPFS_VERSION: "${IPFS_PEER_VERSION}"
@@ -33,35 +23,42 @@ services:
     init: false # Image is already using 'tini' by default
     restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
     volumes:
-      - ipfs-data:/data/ipfs
+      - ../jupyter-data/ipfs:/data/ipfs # Shared IPFS repository
     networks:
       - demo
     environment:
       LIBP2P_FORCE_PNET: 1 # Force usage of private IPFS network (we use a dummy config that doesn't work but does start the IPFS process; we'll get the actual config via fabric)
       IPFS_SWARM_KEY: "/key/swarm/psk/1.0.0/\n/base16/\nffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" # Dummy private IPFS network key
       IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
-      IPFS_AUTORELAY: 'false' # Don't enable AutoRelay (experimental NAT traversal); we use an SSH 
+      IPFS_AUTORELAY: 'false' # Don't enable AutoRelay (experimental NAT traversal); we use an SSH tunnel
     extra_hosts:
       - "host.docker.internal:host-gateway"
   notebook.jupyter-ext.localhost:
-    image: "${JUPYTERLAB_IMAGE}"
+    build: # Own JupyterLab image with prerequisites installed
+      context: ../../jupyter/jupyter-docker/jupyterlab-image/
+      dockerfile: jupyterlab.dockerfile
+      args:
+        JUPYTERLAB_IMAGE: "${JUPYTERLAB_IMAGE}"
+        NODE_VERSION: "${NODE_VERSION}"
+    image: "jc_demo_jupyterlab"
     container_name: notebook.jupyter-ext.localhost
     hostname: notebook.jupyter-ext.localhost
     user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
     group_add:
-      - 100 # 'users' group in container (provides rw access to /opt/conda)
+      - users # 'users' group in container (provides rw access to /opt/conda)
+      - root # provides rw access to /etc/passwd (needed to set UID and GID)
     init: false # Image is already using 'tini' by default
     ports:
       - "${JUPYTERLAB_HTTP_SOCKET}:8888" # Allow access to JupyterLab
     volumes:
-      - ../../src/jupyter/notebook:/home/jovyan/work/notebook:ro
-      - ipfs-data:/home/jovyan/work/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
-      - ./server-crypto-config:/home/jovyan/work/crypto-config:ro
+      - ../../../src/jupyter/notebook:/home/jovyan/work/notebook # Write access to notebooks
+      - ../jupyter-data/ipfs:/home/jovyan/work/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
+      - ../jupyter-data/server-crypto-config:/home/jovyan/work/crypto-config:ro
     networks:
       - demo
     environment:
       JUPYTER_ENABLE_LAB: 'yes'
       RESTARTABLE: 'yes'
-      NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False --ServerApp.trust_xheaders=True'
+      NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False'
     extra_hosts:
       - "host.docker.internal:host-gateway"

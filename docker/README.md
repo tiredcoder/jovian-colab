@@ -22,8 +22,8 @@ The infrastructure consists of the software mentioned in the table below. We use
 | Software                                           | Version                                                                   |
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
 | Ubuntu Server                                      | [20.04.4 LTS](https://releases.ubuntu.com/20.04/)                         |
-| Docker                                             | [20.10.14](https://docs.docker.com/engine)                                |
-| Docker Compose                                     | [1.29.2](https://docs.docker.com/compose)                                 |
+| Docker                                             | [20.10.17](https://docs.docker.com/engine)                                |
+| Docker Compose                                     | [2.6.0](https://docs.docker.com/compose)                                 |
 | IPFS Peer                                          | [0.11.0](https://github.com/ipfs/go-ipfs/tree/v0.11.0)                    |
 | IPFS Cluster                                       | [0.14.2](https://github.com/ipfs/ipfs-cluster/tree/v0.14.2)               |
 | Hyperledger Fabric                                 | [2.4.1](https://hyperledger-fabric.readthedocs.io/en/release-2.4/)        |
@@ -65,18 +65,18 @@ The following network sockets are used *within* the created virtual infrastructu
 | Prometheus Web UI and metrics                                      | TCP 9090 |
 | Grafana Web UI                                                     | TCP 3000 |
 | Hyperledger Explorer Web UI                                        | TCP 8080 |
-| JupyterLab Notebook Web UI                                         | TCP 8888 |
+| JupyterLab Notebook Web UIs (behind reverse proxy)                 | TCP 8888 |
 | External/Second JupyterLab Notebook Web UI                         | TCP 8889 |
 
 ## Docker Host Network Bindings
 The following network sockets are used on the Docker host machine (configured via the .env files). We use these network bindings to selectively expose the container endpoints (see above) to the Docker host machine.
  - IPFS peer APIs (IPFS Web UI access): 127.0.0.1:5000 - 127.0.0.1:5003
- - Organization A's endpoints for external JupyterLab (Fabric CA, Fabric, IPFS): 127.0.0.1:6000 - 127.0.0.1:6005
+ - Organization A's endpoints for external JupyterLab (Fabric CA, Fabric Gateway, IPFS bootstrap node): 127.0.0.1:6000 - 127.0.0.1:6002
  - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
  - JupyterLab Notebook Web UI: 127.0.0.1:8888
 
-## Possibly change JupyterLab's UID and GID
-Several directories will be mounted into the JupyterLab container at */home/jovyan/work*. You can specify your user ID and group ID via the .env file. This allows for data sharing between the container and the Docker host.
+## Possibly change UIDs and GIDs
+Several directories will be mounted into the containers. You can specify your user ID and group ID via the .env files. This allows for data sharing between the containers and the Docker host.
 
 ## Optional: change the secrets in the .env file
 **Generate IPFS cluster secret(s):**
@@ -140,28 +140,30 @@ ssh <user>@<dockerhost> -L 127.0.0.1:8888:127.0.0.1:8888
 ## Access Fabric and IPFS via JupyterLab
 Now that we have a running infrastructure, we combine two Jupyter notebooks to serve as our client applications. One notebook handles our interaction with IPFS and another notebook handles our interaction with Fabric.
 
-It's recommended to first install the prerequisites mentioned in both notebooks for *each* JupyterLab instance (i.e. our Javascript and Python modules), and then to proceed with the Fabric notebook in the first JupyterLab instance.
+We require several prerequisites for these notebooks to work: Node.js and IJavascript have to be installed; the client modules have to be build and installed; and the notebooks and configuration file have to copied from our Git repository's *'src/jupyter/notebook'* directory into the containers. We have automated these steps by modifying the JupyterLab container image.
 
-Both notebooks are available in the *'/home/jovyan/work/notebook'* directory of each JupyterLab instance. This directory is mounted read-only from the Docker host (and shared between all containers). Create a new directory *'/home/jovyan/work/local'* on each JupyterLab instance and copy the notebooks to this directory so that they can be edited. **NOTE:** Any changes to the notebooks will *not* be saved (because we're using the container's local ephemeral storage). Download the notebooks using JupyterLab's GUI if you want to preserve the changes.
+Both notebooks are available in the *'/home/jovyan/work/local'* directory of each JupyterLab instance. Proceed with the Fabric notebook in the first JupyterLab instance to continue this demo. **NOTE:** Any changes to the notebooks will *not* be saved (because we're using the container's local ephemeral storage). Download the notebooks using JupyterLab's GUI if you want to preserve the changes.
 
 ## Optional: Start an external JupyterLab (and an IPFS node client)
-The JupypterLab instances above run on the same server and have direct access to Fabric and IPFS (all containers are part of the same network). We will add another JupyterLab instance that's running on our local system.
+The JupypterLab instances above run on the same server and have direct access to Fabric and IPFS (all containers are part of the same network). We will add another JupyterLab instance that's running on our local system and that connects to organization A.
 
-Set up tunnel (ca, fabric, ipfs):
+Set up an SSH tunnel (to access Fabric CA, Fabric Gatway, and the IPFS bootstrap node):
+```
 ssh <user>@<dockerhost> -L 127.0.0.1:6000:127.0.0.1:6000 127.0.0.1:6001:127.0.0.1:6001 127.0.0.1:6002:127.0.0.1:6002
+```
+Now clone this Git repository to your local system and copy the crypto material to the *'docker/jupyter-external/jupyter-data/server-crypto-config'* directory (i.e. copy the server's *'docker/fabric/fabric-config/crypto-config'* directory to your local system's *'server-crypto-config'* directory).
 
-Boostrap node of OrgA (peer0) via SSH tunnel:  
+Launch JupyterLab and its local IPFS node and then proceed with the Fabric notebook. **NOTE:** The notebooks are available in the *'/home/jovyan/work/notebooks'* directory and any changes to the notebooks *will* be preserved (i.e. in this case we are mounting the host directory inside of the container).
+```
+cd jupyter-external
+./jupyter-docker.sh up
+```
+
+Boostrap node of OrgA (peer0) via SSH tunnel:
 ipfs bootstrap add /dns4/host.docker.internal/tcp/6002/p2p/<nodeid>
 
-Copy the crypto material from the server to the external JupyterLab host (i.e. your local system). Then launch JupyterLab and its local IPFS node.
-```
-(git clone this repo to your local system)
-cd jupyter-external
-docker-compose up -d
-```
-
 ### Access JupyterLab from your web browser
-Note that we are using port 8889 as to prevent a possible collision when using the SSH tunnel above to access the Jupyterlab instance that's running on the server.
+Note that we are using port 8889 as to prevent a possible collision when using the SSH tunnel above to access the Jupyterlab instances that are running on the server.
 [http://127.0.0.1:8889](http://127.0.0.1:8889)
 
 ## Verify that Docker is running
