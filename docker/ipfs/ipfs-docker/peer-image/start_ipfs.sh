@@ -72,7 +72,7 @@ fi
 # https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/config.md#swarmrelayclient
 # https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/config.md#swarmrelayservice
 if [ ! -z "$IPFS_AUTORELAY" ]; then
-  if [ "$IPFS_AUTORELAY" = "true" || [ "$IPFS_AUTORELAY" = "1" ] || [ "$IPFS_AUTORELAY" = "yes" ]; then
+  if [ "$IPFS_AUTORELAY" = "true" ] || [ "$IPFS_AUTORELAY" = "1" ] || [ "$IPFS_AUTORELAY" = "yes" ]; then
     echo "Enabling AutoRelay client..."
     ipfs config --json Swarm.RelayClient.Enabled true
   fi
