@@ -56,7 +56,7 @@ These four tunneled endpoints will provide access to the second peer (`peer1.<pn
 
 ## Cleanup
 ```
-docker-compose down
+docker-compose down -v
 docker kill jc_demo_logspout
 docker rm jc_demo_logspout
 ```

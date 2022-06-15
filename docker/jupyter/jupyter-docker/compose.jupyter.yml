@@ -22,6 +22,7 @@ services:
     image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
     container_name: "ipfs.jupyter-${INSTANCE}.localhost"
     hostname: "ipfs.jupyter-${INSTANCE}.localhost"
+    user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
     init: false # Image is already using 'tini' by default
     restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
     volumes:
@@ -43,19 +44,20 @@ services:
     image: "jc_demo_jupyterlab"
     container_name: "notebook.jupyter-${INSTANCE}.localhost"
     hostname: "notebook.jupyter-${INSTANCE}.localhost"
-    user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
-    group_add:
-      - users # 'users' group in container (provides rw access to /opt/conda)
-      - root # provides rw access to /etc/passwd (needed to set UID and GID)
+    user: root # Needed to set UID & GID (i.e. your user account; needed for bind mounts; see below)   
     init: false # Image is already using 'tini' by default
     volumes:
-      - ../../../src/jupyter/notebook:/home/jovyan/work/notebook:ro # Read-only access to the notebooks
-      - ../jupyter-data/ipfs/${COMPOSE_PROJECT_NAME}:/home/jovyan/work/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
-      - ../../fabric/fabric-config/crypto-config:/home/jovyan/work/crypto-config/fabric:ro
-      - ../../ipfs/crypto-config:/home/jovyan/work/crypto-config/ipfs:ro
+      - ../../../src/jupyter/notebook:/mnt/notebook:ro # Read-only access to the notebooks
+      - ../jupyter-data/ipfs/${COMPOSE_PROJECT_NAME}:/mnt/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
+      - ../../fabric/fabric-config/crypto-config:/mnt/crypto-config/fabric:ro
+      - ../../ipfs/crypto-config:/mnt/crypto-config/ipfs:ro
     networks:
       - demo
     environment:
+      NB_UID: "${JUPYTERLAB_UID}" # The JupyterLab container image includes a script which will set the correct permissions (i.e. your user account)
+      NB_GID: "${JUPYTERLAB_GID}"
+      CHOWN_HOME: 'yes'
+      CHOWN_HOME_OPTS: '-R'
       JUPYTER_ENABLE_LAB: 'yes'
       RESTARTABLE: 'yes'
       NOTEBOOK_ARGS: "--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.allow_origin='*' --ServerApp.base_url=/notebook.jupyter-${INSTANCE}.localhost/"

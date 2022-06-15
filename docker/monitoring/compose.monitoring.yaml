@@ -3,8 +3,8 @@ version: "3.7"
 
 networks:
   demo:
-    external:
-      name: ${DEMO_NETWORK_NAME}
+    name: ${DEMO_NETWORK_NAME}
+    external: True
 
 services:
   node-exporter.monitor.localhost:
@@ -60,7 +60,7 @@ services:
     ports:
       - "${MONITORING_PROMETHEUS_SOCKET}:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - /prometheus
     networks:
       - demo
@@ -122,9 +122,9 @@ services:
       - DISCOVERY_AS_LOCALHOST=false
       - LOGSPOUT=ignore
     volumes:
-      - ./explorer/config-global.json:/opt/explorer/app/platform/fabric/config.json
-      - ./explorer:/opt/explorer/app/platform/fabric/connection-profile
-      - ../fabric/fabric-config/crypto-config:/tmp/crypto
+      - ./explorer/config-global.json:/opt/explorer/app/platform/fabric/config.json:ro
+      - ./explorer:/opt/explorer/app/platform/fabric/connection-profile:ro
+      - ../fabric/fabric-config/crypto-config:/tmp/crypto:ro
     ports:
       - "${MONITORING_FABRIC_EXPLORER_SOCKET}:8080"
     depends_on:

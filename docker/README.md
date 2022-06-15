@@ -23,7 +23,7 @@ The infrastructure consists of the software mentioned in the table below. We use
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
 | Ubuntu Server                                      | [20.04.4 LTS](https://releases.ubuntu.com/20.04/)                         |
 | Docker                                             | [20.10.17](https://docs.docker.com/engine)                                |
-| Docker Compose                                     | [2.6.0](https://docs.docker.com/compose)                                 |
+| Docker Compose                                     | [2.6.0](https://docs.docker.com/compose)                                  |
 | IPFS Peer                                          | [0.11.0](https://github.com/ipfs/go-ipfs/tree/v0.11.0)                    |
 | IPFS Cluster                                       | [0.14.2](https://github.com/ipfs/ipfs-cluster/tree/v0.14.2)               |
 | Hyperledger Fabric                                 | [2.4.1](https://hyperledger-fabric.readthedocs.io/en/release-2.4/)        |
@@ -156,7 +156,7 @@ Now clone this Git repository to your local system and copy the crypto material 
 Launch JupyterLab and its local IPFS node and then proceed with the Fabric notebook. **NOTE:** The notebooks are available in the *'/home/jovyan/work/notebooks'* directory and any changes to the notebooks *will* be preserved (i.e. in this case we are mounting the host directory inside of the container).
 ```
 cd jupyter-external
-./jupyter-docker.sh up
+./jupyter-docker-ext.sh up
 ```
 
 Boostrap node of OrgA (peer0) via SSH tunnel:

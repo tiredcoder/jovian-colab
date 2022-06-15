@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -e
 IPFS_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
+IPFS_UID=$(id -u)
+IPFS_GID=$(id -g)
 
 bootstrap() {
   echo "Bootstrapping IPFS..."
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker docker-compose -f compose.ipfs-bootstrap.yml up -d)
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker docker-compose -f compose.ipfs-bootstrap.yml logs)
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml up -d)
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml logs)
   sleep 8
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker docker-compose -f compose.ipfs-bootstrap.yml down)
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml down)
 }
 
 generateClusterTLS() {
@@ -60,19 +62,19 @@ networkUp() {
 
 startNetwork() {
   echo "Starting IPFS network..."
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && docker-compose up -d)
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose up -d)
   sleep 6
 }
 
 stopNetwork() {
   echo "Stopping IPFS network..."
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && docker-compose stop)
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose stop)
   sleep 4
 }
 
 networkDown() {
   echo "Destroying IPFS network..."
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && docker-compose down)
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose down -v)
   echo "Removing generated TLS crypto material..."
   rm -rf "$IPFS_NETWORK_ROOT/crypto-config"
   echo "Done! Network was purged"

@@ -20,6 +20,7 @@ services:
     image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
     container_name: ipfs.jupyter-ext.localhost
     hostname: ipfs.jupyter-ext.localhost
+    user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
     init: false # Image is already using 'tini' by default
     restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
     volumes:
@@ -43,20 +44,21 @@ services:
     image: "jc_demo_jupyterlab"
     container_name: notebook.jupyter-ext.localhost
     hostname: notebook.jupyter-ext.localhost
-    user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
-    group_add:
-      - users # 'users' group in container (provides rw access to /opt/conda)
-      - root # provides rw access to /etc/passwd (needed to set UID and GID)
+    user: root # Needed to set UID & GID (i.e. your user account; needed for bind mounts; see below)
     init: false # Image is already using 'tini' by default
     ports:
       - "${JUPYTERLAB_HTTP_SOCKET}:8888" # Allow access to JupyterLab
     volumes:
       - ../../../src/jupyter/notebook:/home/jovyan/work/notebook # Write access to notebooks
-      - ../jupyter-data/ipfs:/home/jovyan/work/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
-      - ../jupyter-data/server-crypto-config:/home/jovyan/work/crypto-config:ro
+      - ../jupyter-data/ipfs:/mnt/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
+      - ../jupyter-data/server-crypto-config:/mnt/crypto-config:ro
     networks:
       - demo
     environment:
+      NB_UID: "${JUPYTERLAB_UID}" # The JupyterLab container image includes a script which will set the correct permissions (i.e. your user account)
+      NB_GID: "${JUPYTERLAB_GID}"
+      CHOWN_HOME: 'yes'
+      CHOWN_HOME_OPTS: '-R'
       JUPYTER_ENABLE_LAB: 'yes'
       RESTARTABLE: 'yes'
       NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False'

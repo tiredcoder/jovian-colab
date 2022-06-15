@@ -7,8 +7,8 @@ version: "3.7"
 # One network is used to provide inter-org Fabric communication, for accessing the IPFS APIs, and for exposing the Hyperledger Fabric Gateway(s).
 networks:
   demo:
-    external:
-      name: ${DEMO_NETWORK_NAME}
+    name: ${DEMO_NETWORK_NAME}
+    external: True
 
 services:
   cc-builder-nodejs-image.fabric.localhost:

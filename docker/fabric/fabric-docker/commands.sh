@@ -405,8 +405,8 @@ networkDown() {
   docker exec ca-client.fabric.localhost sh -c "rm -rf ./wallet" || echo "Failed to remove the CA client application's wallet directory!"
 
   printHeadline "Destroying network" "U1F916"
-  (cd "$FABLO_NETWORK_ROOT"/fabric-docker && docker-compose -f compose.fabric-ca.yaml --project-name "${COMPOSE_PROJECT_NAME}-ca" down)
-  (cd "$FABLO_NETWORK_ROOT"/fabric-docker && docker-compose down)
+  (cd "$FABLO_NETWORK_ROOT"/fabric-docker && docker-compose -f compose.fabric-ca.yaml --project-name "${COMPOSE_PROJECT_NAME}-ca" down -v)
+  (cd "$FABLO_NETWORK_ROOT"/fabric-docker && docker-compose down -v)
 
   printf "\nRemoving chaincode containers & images... \U1F5D1 \n"
   docker rm -f $(docker ps -a | grep dev-peer0.orga.fabric.localhost-consortium-cc-ipfs_0.0.1-* | awk '{print $1}') || echo "docker rm failed, Check if all fabric dockers properly was deleted"

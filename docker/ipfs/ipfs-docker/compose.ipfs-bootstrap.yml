@@ -11,6 +11,7 @@ x-ipfs-peer: &default-ipfs-peer
     args:
       IPFS_VERSION: "${IPFS_PEER_VERSION}"
   image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
+  user: "${IPFS_UID}:${IPFS_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts) 
   init: false
   environment: &env-default-ipfs-peer
     LIBP2P_FORCE_PNET: 1

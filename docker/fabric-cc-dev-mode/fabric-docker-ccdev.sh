@@ -4,6 +4,8 @@ CURRENT_DIR="$(pwd)"
 SCRIPT_DIR="$(dirname $(readlink -f ${0}))"
 ACTION="${1:-?}"
 CHAINCODE_DIR="$(readlink -f ${2:-$SCRIPT_DIR/../../src/fabric/chaincode/cc-ipfs})"
+FABRIC_TOOLS_UID=$(id -u)
+FABRIC_TOOLS_GID=$(id -g)
 
 # Get the config
 source "$SCRIPT_DIR/.env"
@@ -14,7 +16,7 @@ source "$SCRIPT_DIR/../fabric/fabric-docker/scripts/chaincode-functions.sh"
 
 networkUp() {
   printHeadline "Starting Fabric devmode network" "U1F680"
-  CHAINCODE_DIR="${CHAINCODE_DIR}" docker-compose up -d
+  (cd "$SCRIPT_DIR"/fabric-docker && env FABRIC_TOOLS_UID=$FABRIC_TOOLS_UID FABRIC_TOOLS_GID=$FABRIC_TOOLS_GID CHAINCODE_DIR="${CHAINCODE_DIR}" docker-compose up -d)
   sleep 5
 
   printItalics "Generating crypto material" "U1F512"
@@ -72,7 +74,7 @@ chaincodeInvoke() {
 
 networkDown() {
   printHeadline "Destroying the Fabric devmode network" "U1F68F"
-  CHAINCODE_DIR="${CHAINCODE_DIR}" docker-compose down
+  (cd "$SCRIPT_DIR"/fabric-docker && env FABRIC_TOOLS_UID=$FABRIC_TOOLS_UID FABRIC_TOOLS_GID=$FABRIC_TOOLS_GID CHAINCODE_DIR="${CHAINCODE_DIR}" docker-compose down -v)
   rm -f "$SCRIPT_DIR/fabric-config/"{genesisblock,ch1.tx,ch1.block}
   rm -rf "$SCRIPT_DIR/fabric-config/msp/"{admincerts,cacerts,keystore,signcerts,tlscacerts}
 }

@@ -6,8 +6,8 @@ version: "3.7"
 # One network is used to provide inter-org Fabric communication, for accessing the IPFS APIs, and for exposing the Hyperledger Fabric Gateway(s). This network is created by the IPFS compose file.
 networks:
   demo:
-    external:
-      name: ${DEMO_NETWORK_NAME}
+    name: ${DEMO_NETWORK_NAME}
+    external: True
 
 services:
   tools.fabric-ccdev.localhost:

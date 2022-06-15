@@ -9,8 +9,8 @@ version: "3.7"
 # Advanced (production) network topologies are not accounted for in this demo.
 networks:
   demo:
-    external:
-      name: "${DEMO_NETWORK_NAME}"
+    name: ${DEMO_NETWORK_NAME}
+    external: True
 
 
 # IPFS peer service template
@@ -22,6 +22,7 @@ x-ipfs-peer: &default-ipfs-peer
       IPFS_VERSION: "${IPFS_PEER_VERSION}"
   image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
   init: false # Image is already using 'tini' by default
+  user: "${IPFS_UID}:${IPFS_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
   networks:
     - demo
   environment: &env-default-ipfs-peer
@@ -35,6 +36,7 @@ x-ipfs-peer: &default-ipfs-peer
 x-ipfs-cluster: &default-ipfs-cluster
   image: "ipfs/ipfs-cluster:${IPFS_CLUSTER_VERSION}"
   init: false # Image is already using 'tini' by default
+  user: "${IPFS_UID}:${IPFS_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
   networks:
     - demo
   environment: &env-default-ipfs-cluster

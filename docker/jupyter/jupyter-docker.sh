@@ -7,6 +7,8 @@
 set -e
 JUPYTER_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
 source "$JUPYTER_NETWORK_ROOT/jupyter-docker/.env"
+JUPYTERLAB_UID=$(id -u)
+JUPYTERLAB_GID=$(id -g)
 
 proxyStart() {
   local INSTANCES="$1"
@@ -38,7 +40,7 @@ prerequisitesInstall() {
   echo "Building JupyterLab container image..."
   (
     cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker \
-    && env INSTANCE='build' docker-compose build --no-cache notebook.jupyter.localhost \
+    && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID INSTANCE='build' docker-compose build --no-cache notebook.jupyter.localhost \
     && rm "${JUPYTER_NETWORK_ROOT}/jupyter-docker/jupyterlab-image/"*.{tgz,whl}
   )
 }
@@ -54,10 +56,10 @@ networkUp() {
     mkdir "$JUPYTER_NETWORK_ROOT"/jupyter-data/ipfs/"${COMPOSE_PROJECT_NAME}-$i"
     
     # Env vars given at docker-compose invoke supersede .env file (allowing us to set the project name for each instance)
-    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose up -d)
+    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose up -d)
 
     echo "Copying notebooks to local container storage for instance $i..."
-    docker exec -i "notebook.jupyter-$i.localhost" sh -c "mkdir /home/jovyan/work/local && cp -r /home/jovyan/work/notebook/* /home/jovyan/work/local/"
+    docker exec -i "notebook.jupyter-$i.localhost" sh -c "mkdir /home/jovyan/work/local && cp -r /mnt/notebook/* /home/jovyan/work/local/"
   done
   
   proxyStart "$INSTANCES"
@@ -67,7 +69,7 @@ startNetwork() {
   echo "Resuming Jupyter network(s)..."
   local i=1
   while [ $(cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose -p "${COMPOSE_PROJECT_NAME}-$i" ps -q | wc -c) -ne 0 ]; do
-    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose up -d)
+    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose up -d)
     (( i++ ))
   done
   docker start nginx.jupyter.localhost >/dev/null 2>&1
@@ -77,7 +79,7 @@ stopNetwork() {
   echo "Stopping Jupyter network(s)..."
   local i=1
   while [ $(cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose -p "${COMPOSE_PROJECT_NAME}-$i" ps -q | wc -c) -ne 0 ]; do
-    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose stop)
+    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose stop)
     (( i++ ))
   done
   docker stop nginx.jupyter.localhost >/dev/null 2>&1
@@ -87,7 +89,7 @@ networkDown() {
   echo "Destroying Jupyter network(s) and removing the IPFS repositories..."
   local i=1
   while [ $(cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose -p "${COMPOSE_PROJECT_NAME}-$i" ps -q | wc -c) -ne 0 ]; do
-    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose down)
+    (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose down -v)
     rm -rf "$JUPYTER_NETWORK_ROOT"/jupyter-data/ipfs/"${COMPOSE_PROJECT_NAME}-$i"
     ((i++))
   done

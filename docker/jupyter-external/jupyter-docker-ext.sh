@@ -5,6 +5,8 @@
 set -e
 JUPYTER_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
 source "$JUPYTER_NETWORK_ROOT/jupyter-docker/.env"
+JUPYTERLAB_UID=$(id -u)
+JUPYTERLAB_GID=$(id -g)
 
 prerequisitesInstall() {
   echo "Building client modules..."
@@ -23,7 +25,7 @@ prerequisitesInstall() {
   echo "Building JupyterLab container image..."
   (
     cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker \
-    && docker-compose build --no-cache notebook.jupyter-ext.localhost \
+    && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID docker-compose build --no-cache notebook.jupyter-ext.localhost \
     && rm "${JUPYTER_NETWORK_ROOT}/../jupyter/jupyter-docker/jupyterlab-image/"*.{tgz,whl}
   )
 }
@@ -31,12 +33,12 @@ prerequisitesInstall() {
 networkUp() {
   echo "Starting *** EXTERNAL *** Jupyter network..."
   prerequisitesInstall
-  (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose up -d)
+  (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID docker-compose up -d)
 }
 
 startNetwork() {
   echo "Resuming Jupyter network..."
-  (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose up -d)
+  (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID docker-compose up -d)
 }
 
 stopNetwork() {
@@ -46,7 +48,7 @@ stopNetwork() {
 
 networkDown() {
   echo "Destroying Jupyter network and removing the IPFS repository..."
-  (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && docker-compose down)
+  (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID docker-compose down -v)
   rm -rf "$JUPYTER_NETWORK_ROOT"/jupyter-data/ipfs/*
   echo "Removing JupyterLab image..."
   docker rmi "jc_demo_jupyterlab"
