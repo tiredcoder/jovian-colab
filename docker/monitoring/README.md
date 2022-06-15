@@ -9,15 +9,15 @@ See the '.env' file for the configuration (e.g. which software version(s) to use
 ![Infrastructure overview](monitoring_infra.svg)
 
 ## Monitor IPFS & Fabric container terminal ouput using [Logspout](https://github.com/gliderlabs/logspout)
-If we *only* want to monitor the output of the IPFS and Fabric containers, we can use the script below instead of the entire monitoring infrastructure.
+If we *only* want to monitor the output of the IPFS and Fabric containers, we can use the option below instead of executing the entire monitoring infrastructure.
 ```
-./monitordocker.sh
+./monitoring-docker.sh logspout
 ```
 The script will start a logspout container and access its published socket (default: <http://127.0.0.1:7000>).
 
 ## Start the monitoring infrastructure (first start IPFS and Fabric)
 ```
-docker-compose up -d
+./monitoring-docker.sh up
 ```
 
 ## Monitoring Tools
@@ -56,9 +56,7 @@ These four tunneled endpoints will provide access to the second peer (`peer1.<pn
 
 ## Cleanup
 ```
-docker-compose down -v
-docker kill jc_demo_logspout
-docker rm jc_demo_logspout
+./monitoring-docker.sh down
 ```
 
 ## Possibly remove the created Docker volumes

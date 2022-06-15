@@ -17,7 +17,7 @@ The infrastructure consists of about 50 Docker containers.
  - Software: See tables below.
 
 ## Versions
-The infrastructure consists of the software mentioned in the table below. We use Docker images for most of this software.
+The infrastructure consists of the software mentioned in the table below. We use Docker images for most of this software. Your user has to be a member of the 'docker' group. User namespaces / rootless containers and Podman are *not* supported.
 
 | Software                                           | Version                                                                   |
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -145,12 +145,14 @@ We require several prerequisites for these notebooks to work: Node.js and IJavas
 Both notebooks are available in the *'/home/jovyan/work/local'* directory of each JupyterLab instance. Proceed with the Fabric notebook in the first JupyterLab instance to continue this demo. **NOTE:** Any changes to the notebooks will *not* be saved (because we're using the container's local ephemeral storage). Download the notebooks using JupyterLab's GUI if you want to preserve the changes.
 
 ## Optional: Start an external JupyterLab (and an IPFS node client)
-The JupypterLab instances above run on the same server and have direct access to Fabric and IPFS (all containers are part of the same network). We will add another JupyterLab instance that's running on our local system and that connects to organization A.
+The JupypterLab instances above run on the same server and have direct access to Fabric and IPFS (all containers are part of the same network). We can add another JupyterLab instance that's running on our local system and that connects to organization A.
 
 Set up an SSH tunnel (to access Fabric CA, Fabric Gatway, and the IPFS bootstrap node):
 ```
-ssh <user>@<dockerhost> -L 127.0.0.1:6000:127.0.0.1:6000 127.0.0.1:6001:127.0.0.1:6001 127.0.0.1:6002:127.0.0.1:6002
+ssh <user>@<dockerhost> -L 172.17.0.1:6000:127.0.0.1:6000 172.17.0.1:6001:127.0.0.1:6001 172.17.0.1:6002:127.0.0.1:6002
 ```
+Note that this SSH tunnel connects to the IP address of the local Docker default bridge (172.17.0.1). This interface is accessible from *within* the containers.
+
 Now clone this Git repository to your local system and copy the crypto material to the *'docker/jupyter-external/jupyter-data/server-crypto-config'* directory (i.e. copy the server's *'docker/fabric/fabric-config/crypto-config'* directory to your local system's *'server-crypto-config'* directory).
 
 Launch JupyterLab and its local IPFS node and then proceed with the Fabric notebook. **NOTE:** The notebooks are available in the *'/home/jovyan/work/notebooks'* directory and any changes to the notebooks *will* be preserved (i.e. in this case we are mounting the host directory inside of the container).
@@ -158,9 +160,6 @@ Launch JupyterLab and its local IPFS node and then proceed with the Fabric noteb
 cd jupyter-external
 ./jupyter-docker-ext.sh up
 ```
-
-Boostrap node of OrgA (peer0) via SSH tunnel:
-ipfs bootstrap add /dns4/host.docker.internal/tcp/6002/p2p/<nodeid>
 
 ### Access JupyterLab from your web browser
 Note that we are using port 8889 as to prevent a possible collision when using the SSH tunnel above to access the Jupyterlab instances that are running on the server.

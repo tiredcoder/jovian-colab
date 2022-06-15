@@ -61,7 +61,7 @@ fi
 # Toggle multicast DNS peer discovery (default is true)
 # https://github.com/ipfs/ipfs-docs/blob/6a961afbe4c5978e6c5cbdb7d0b27502953b79d5/docs/how-to/configure-node.md#discovery
 if [ ! -z "$IPFS_MDNS" ]; then
-  if [ "$IPFS_MDNS" = "false" ] || [ "$IPFS_MDNS" = "0" ] || [ "$IPFS_MDNS" = "no" ; then
+  if [ "$IPFS_MDNS" = "false" ] || [ "$IPFS_MDNS" = "0" ] || [ "$IPFS_MDNS" = "no" ]; then
     echo "Disabling multicast DNS peer discovery..."
     ipfs config --bool Discovery.MDNS.Enabled 0
   fi

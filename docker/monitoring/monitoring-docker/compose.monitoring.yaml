@@ -60,14 +60,14 @@ services:
     ports:
       - "${MONITORING_PROMETHEUS_SOCKET}:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring-config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - /prometheus
     networks:
       - demo
 
   grafana.monitor.localhost:
     build:
-      context: ./grafana/docker-image
+      context: ../monitoring-config/grafana/docker-image
       dockerfile: grafana.dockerfile
       args:
         GRAFANA_VERSION: "${GRAFANA_VERSION}"
@@ -83,7 +83,7 @@ services:
     ports:
       - "${MONITORING_GRAFANA_SOCKET}:3000"
     volumes:
-      - ./grafana/provisioning:/var/lib/grafana/provisioning
+      - ../monitoring-config/grafana/provisioning:/var/lib/grafana/provisioning
       - /var/lib/grafana
     networks:
       - demo
@@ -122,9 +122,9 @@ services:
       - DISCOVERY_AS_LOCALHOST=false
       - LOGSPOUT=ignore
     volumes:
-      - ./explorer/config-global.json:/opt/explorer/app/platform/fabric/config.json:ro
-      - ./explorer:/opt/explorer/app/platform/fabric/connection-profile:ro
-      - ../fabric/fabric-config/crypto-config:/tmp/crypto:ro
+      - ../monitoring-config/explorer/config-global.json:/opt/explorer/app/platform/fabric/config.json:ro
+      - ../monitoring-config/explorer:/opt/explorer/app/platform/fabric/connection-profile:ro
+      - ../../fabric/fabric-config/crypto-config:/tmp/crypto:ro
     ports:
       - "${MONITORING_FABRIC_EXPLORER_SOCKET}:8080"
     depends_on:

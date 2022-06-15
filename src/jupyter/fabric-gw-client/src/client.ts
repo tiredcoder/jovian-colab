@@ -32,6 +32,7 @@ interface config {
   caName: string;
   gatewayEndpoint: string;
   gatewayTlsCertFile: string;
+  caTlsVerify: boolean;
   gatewayHostAlias: string;
   channel: string;
   chaincode: string;
@@ -70,6 +71,7 @@ const parseConfig = async (configFile?: string, organization?: string): Promise<
       idKeyFile: EnvOrConfigOrError('FABRIC_ID_KEY', content ? content.identities[content.organizations[org].identity].key.path : undefined ),
       caEndpoint: EnvOrConfigOrError('FABRIC_CA', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].url : undefined),
       caTlsCertFile: EnvOrConfigOrError('FABRIC_CA_CERT', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].tlsCACerts.path : undefined),
+      caTlsVerify: (EnvOrConfigOrError('FABRIC_CA_VERIFY', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].httpOptions.verify : undefined) === 'true'),
       caName: EnvOrConfigOrError('FABRIC_CA_NAME', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].caName : undefined),
       gatewayEndpoint: EnvOrConfigOrError('FABRIC_GATEWAY', content ? content.gateways[content.organizations[org].gateway].url : undefined),
       gatewayTlsCertFile: EnvOrConfigOrError('FABRIC_GATEWAY_CERT', content ? content.gateways[content.organizations[org].gateway].tlsCACerts.path : undefined),
@@ -92,7 +94,7 @@ const fileExists = async (file: string): Promise<boolean> => {
   }
 }
 
-const enroll = async (identity: string, idCertFile: string, idKeyFile: string, secret: string, caEndpoint: string, caTlsCertFiles: string[], caName: string): Promise<void> => {
+const enroll = async (identity: string, idCertFile: string, idKeyFile: string, secret: string, caEndpoint: string, caTlsCertFiles: string[], caTlsVerify: boolean, caName: string): Promise<void> => {
   try {
     // Don't enroll if credentials already exist
     if (await fileExists(idCertFile)) throw new Error(`file '${idCertFile}' exists`);
@@ -104,7 +106,7 @@ const enroll = async (identity: string, idCertFile: string, idKeyFile: string, s
     });
     
     // Enroll the user
-    const ca = new FabricCAServices(caEndpoint, { trustedRoots: caTlsCertFiles, verify: false }, caName);
+    const ca = new FabricCAServices(caEndpoint, { trustedRoots: caTlsCertFiles, verify: caTlsVerify }, caName);
     const enrollment = await ca.enroll({ enrollmentID: identity, enrollmentSecret: secret });
     
     // Save credentials to disk (also create dir if it doesn't exists)
@@ -157,7 +159,7 @@ const getConfig = async (configFile: string, organization: string): Promise<conf
 
 const execEnroll = async (config: config, secret: string): Promise<void> => {
   console.log(' Enrolling... ');
-  await enroll(config.identity, config.idCertFile, config.idKeyFile, secret, config.caEndpoint, [config.caTlsCertFile], config.caName);
+  await enroll(config.identity, config.idCertFile, config.idKeyFile, secret, config.caEndpoint, [config.caTlsCertFile], config.caTlsVerify, config.caName);
   console.log('Enrollment complete!');
 }
 
