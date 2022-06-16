@@ -71,7 +71,10 @@ The following network sockets are used *within* the created virtual infrastructu
 ## Docker Host Network Bindings
 The following network sockets are used on the Docker host machine (configured via the .env files). We use these network bindings to selectively expose the container endpoints (see above) to the Docker host machine.
  - IPFS peer APIs (IPFS Web UI access): 127.0.0.1:5000 - 127.0.0.1:5003
- - Organization A's endpoints for external JupyterLab (Fabric CA, Fabric Gateway, IPFS bootstrap node): 127.0.0.1:6000 - 127.0.0.1:6002
+ - Organization A's endpoints to provide access to an external JupyterLab instance (via an SSH tunnel):
+   - Fabric CA: 127.0.0.1:7054
+   - Fabric Gateway: 127.0.0.1:7051
+   - IPFS bootstrap node: 127.0.0.1:4001
  - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
  - JupyterLab Notebook Web UI: 127.0.0.1:8888
 
@@ -149,7 +152,7 @@ The JupypterLab instances above run on the same server and have direct access to
 
 Set up an SSH tunnel (to access Fabric CA, Fabric Gatway, and the IPFS bootstrap node):
 ```
-ssh <user>@<dockerhost> -L 172.17.0.1:6000:127.0.0.1:6000 172.17.0.1:6001:127.0.0.1:6001 172.17.0.1:6002:127.0.0.1:6002
+ssh <user>@<dockerhost> -L 172.17.0.1:7054:127.0.0.1:7054 172.17.0.1:7051:127.0.0.1:7051 172.17.0.1:4001:127.0.0.1:4001
 ```
 Note that this SSH tunnel connects to the IP address of the local Docker default bridge (172.17.0.1). This interface is accessible from *within* the containers.
 

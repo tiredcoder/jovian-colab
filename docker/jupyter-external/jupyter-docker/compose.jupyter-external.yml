@@ -11,15 +11,15 @@ networks:
 
 
 services:
-  ipfs.jupyter-ext.localhost:
+  ipfs.jupyter.localhost:
     build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
       context: ../../ipfs/ipfs-docker/peer-image/
       dockerfile: ipfs-peer.dockerfile
       args:
         IPFS_VERSION: "${IPFS_PEER_VERSION}"
     image: "jc_demo_go-ipfs:${IPFS_PEER_VERSION}"
-    container_name: ipfs.jupyter-ext.localhost
-    hostname: ipfs.jupyter-ext.localhost
+    container_name: ipfs.jupyter.localhost
+    hostname: ipfs.jupyter.localhost
     user: "${JUPYTERLAB_UID}:${JUPYTERLAB_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
     init: false # Image is already using 'tini' by default
     restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
@@ -34,7 +34,8 @@ services:
       IPFS_AUTORELAY: 'false' # Don't enable AutoRelay (experimental NAT traversal); we use an SSH tunnel
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  notebook.jupyter-ext.localhost:
+      - "peer0.pnet0.orga.ipfs.localhost:host-gateway"
+  notebook.jupyter.localhost:
     build: # Own JupyterLab image with prerequisites installed
       context: ../../jupyter/jupyter-docker/jupyterlab-image/
       dockerfile: jupyterlab.dockerfile
@@ -42,8 +43,8 @@ services:
         JUPYTERLAB_IMAGE: "${JUPYTERLAB_IMAGE}"
         NODE_VERSION: "${NODE_VERSION}"
     image: "jc_demo_jupyterlab"
-    container_name: notebook.jupyter-ext.localhost
-    hostname: notebook.jupyter-ext.localhost
+    container_name: notebook.jupyter.localhost
+    hostname: notebook.jupyter.localhost
     user: root # Needed to set UID & GID (i.e. your user account; needed for bind mounts; see below)
     init: false # Image is already using 'tini' by default
     ports:
@@ -64,3 +65,6 @@ services:
       NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False'
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "ca.orga.fabric.localhost:host-gateway"
+      - "peer0.orga.fabric.localhost:host-gateway"
+      - "peer0.pnet0.orga.ipfs.localhost:host-gateway"

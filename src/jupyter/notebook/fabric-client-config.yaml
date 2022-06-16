@@ -30,15 +30,6 @@ organizations:
       - consortium-chain
     defaultChannel: consortium-chain
     defaultChaincode: consortium-cc-ipfs
-  orgA-external:
-    mspid: MSPorgA
-    identity: orgAuser
-    certificateAuthority: ca.orga.fabric.localhost.external
-    gateway: peer0.orga.fabric.localhost.external
-    channels:
-      - consortium-chain
-    defaultChannel: consortium-chain
-    defaultChaincode: consortium-cc-ipfs
 identities:
   orgAuser:
     key:
@@ -83,12 +74,6 @@ gateways:
       path: /mnt/crypto-config/fabric/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/tls/ca.crt
     grpcOptions:
       ssl-target-name-override: peer0.orgc.fabric.localhost
-  peer0.orga.fabric.localhost.external:
-    url: host.docker.internal:6001
-    tlsCACerts:
-      path: /mnt/crypto-config/fabric/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls/ca.crt
-    grpcOptions:
-      ssl-target-name-override: peer0.orga.fabric.localhost
 certificateAuthorities:
   ca.orga.fabric.localhost:
     url: https://ca.orga.fabric.localhost:7054
@@ -109,12 +94,5 @@ certificateAuthorities:
     caName: ca.orgc.fabric.localhost
     tlsCACerts:
       path: /mnt/crypto-config/fabric/peerOrganizations/orgc.fabric.localhost/ca/ca.orgc.fabric.localhost-cert.pem
-    httpOptions:
-      verify: true
-  ca.orga.fabric.localhost.external:
-    url: https://host.docker.internal:6000
-    caName: ca.orga.fabric.localhost
-    tlsCACerts:
-      path: /mnt/crypto-config/fabric/peerOrganizations/orga.fabric.localhost/ca/ca.orga.fabric.localhost-cert.pem
     httpOptions:
       verify: true

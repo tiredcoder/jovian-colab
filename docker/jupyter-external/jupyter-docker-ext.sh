@@ -25,7 +25,7 @@ prerequisitesInstall() {
   echo "Building JupyterLab container image..."
   (
     cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker \
-    && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID docker-compose build --no-cache notebook.jupyter-ext.localhost \
+    && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID docker-compose build --no-cache notebook.jupyter.localhost \
     && rm "${JUPYTER_NETWORK_ROOT}/../jupyter/jupyter-docker/jupyterlab-image/"*.{tgz,whl}
   )
 }
