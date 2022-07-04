@@ -1,7 +1,7 @@
 # IPFS Peer Container Image With Private Network Bootstrapping, mDNS toggle, and AutoRelay toggle support
 
 # Default image
-ARG IPFS_VERSION="v0.11.0"
+ARG IPFS_VERSION="v0.12.2"
 FROM "ipfs/go-ipfs:${IPFS_VERSION}"
 
 # Overwrite IPFS's start script

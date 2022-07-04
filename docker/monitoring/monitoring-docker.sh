@@ -5,8 +5,8 @@ source "$MONITORING_NETWORK_ROOT/monitoring-docker/.env"
 
 logspoutDown() {
   local CONTAINER_NAME="$1"
-  docker kill "${CONTAINER_NAME}" 2> /dev/null 1>&2 || true
-  docker rm "${CONTAINER_NAME}" 2> /dev/null 1>&2 || true
+  docker kill "${CONTAINER_NAME}" 2>/dev/null 1>&2 || true
+  docker rm "${CONTAINER_NAME}" 2>/dev/null 1>&2 || true
 }
 
 # logspout and http stream tools to let you watch the docker containers in action
@@ -25,7 +25,7 @@ logspoutUp() {
     --volume=/var/run/docker.sock:/var/run/docker.sock \
     --publish=${SOCKET}:80 \
     --network ${DOCKER_NETWORK} \
-    gliderlabs/logspout
+    gliderlabs/logspout 2>/dev/null 1>&2
 
   # Get output
   sleep 4

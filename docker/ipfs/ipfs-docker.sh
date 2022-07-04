@@ -6,9 +6,10 @@ IPFS_GID=$(id -g)
 
 bootstrap() {
   echo "Bootstrapping IPFS..."
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml up -d)
-  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml logs)
-  sleep 8
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml up -d)  
+  sleep 10
+  (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml logs | grep '"ID"')
+  sleep 5
   (cd "$IPFS_NETWORK_ROOT"/ipfs-docker && env IPFS_UID=$IPFS_UID IPFS_GID=$IPFS_GID docker-compose -f compose.ipfs-bootstrap.yml down)
 }
 

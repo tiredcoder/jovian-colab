@@ -21,14 +21,14 @@ import * as crypto from 'crypto';
 import { Gateway, Network, connect, Contract, Identity, Signer, signers } from '@hyperledger/fabric-gateway';
 import { TextDecoder } from 'util';
 
-interface config {
+interface Config {
   organization: string;
   mspId: string;
   identity: string;
   idCertFile: string;
   idKeyFile: string;
   caEndpoint: string;
-  caTlsCertFile: string;
+  caTlsRootCertFile: string;
   caName: string;
   gatewayEndpoint: string;
   gatewayTlsCertFile: string;
@@ -51,7 +51,7 @@ function EnvOrConfigOrError(envVariableName: string, configFileValue: string): s
   throw new Error('Missing configuration'); 
 }
 
-const parseConfig = async (configFile?: string, organization?: string): Promise<config> => {
+const parseConfig = async (configFile?: string, organization?: string): Promise<Config> => {
   console.log(`Configuration File: ${configFile}`);
   try {
     // Load config file
@@ -63,15 +63,15 @@ const parseConfig = async (configFile?: string, organization?: string): Promise<
     if (typeof org == 'undefined') throw new Error('Organization is not specified');
 
     // Set config (env > config file )
-    const config: config = {
+    const config: Config = {
       organization: org,
       mspId: EnvOrConfigOrError('FABRIC_MSPID', content ? content.organizations[org].mspid : undefined),
       identity: EnvOrConfigOrError('FABRIC_ID', content ? content.organizations[org].identity : undefined ),
       idCertFile: EnvOrConfigOrError('FABRIC_ID_CERT', content ? content.identities[content.organizations[org].identity].cert.path : undefined ),
       idKeyFile: EnvOrConfigOrError('FABRIC_ID_KEY', content ? content.identities[content.organizations[org].identity].key.path : undefined ),
       caEndpoint: EnvOrConfigOrError('FABRIC_CA', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].url : undefined),
-      caTlsCertFile: EnvOrConfigOrError('FABRIC_CA_CERT', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].tlsCACerts.path : undefined),
-      caTlsVerify: (EnvOrConfigOrError('FABRIC_CA_VERIFY', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].httpOptions.verify : undefined) === 'true'),
+      caTlsRootCertFile: EnvOrConfigOrError('FABRIC_CA_CERT', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].tlsCACerts.path : undefined),
+      caTlsVerify: Boolean(EnvOrConfigOrError('FABRIC_CA_VERIFY', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].httpOptions.verify : undefined)),
       caName: EnvOrConfigOrError('FABRIC_CA_NAME', content ? content.certificateAuthorities[content.organizations[org].certificateAuthority].caName : undefined),
       gatewayEndpoint: EnvOrConfigOrError('FABRIC_GATEWAY', content ? content.gateways[content.organizations[org].gateway].url : undefined),
       gatewayTlsCertFile: EnvOrConfigOrError('FABRIC_GATEWAY_CERT', content ? content.gateways[content.organizations[org].gateway].tlsCACerts.path : undefined),
@@ -94,19 +94,17 @@ const fileExists = async (file: string): Promise<boolean> => {
   }
 }
 
-const enroll = async (identity: string, idCertFile: string, idKeyFile: string, secret: string, caEndpoint: string, caTlsCertFiles: string[], caTlsVerify: boolean, caName: string): Promise<void> => {
+const enroll = async (identity: string, idCertFile: string, idKeyFile: string, secret: string, caEndpoint: string, caTlsRootCertFile: string, caTlsVerify: boolean, caName: string): Promise<void> => {
   try {
     // Don't enroll if credentials already exist
     if (await fileExists(idCertFile)) throw new Error(`file '${idCertFile}' exists`);
     if (await fileExists(idKeyFile)) throw new Error(`file '${idKeyFile}' exists`);
     
-    // Set full paths for all CA TLS certs
-    caTlsCertFiles.forEach((certFile: string, i: number) => {
-      caTlsCertFiles[i] = path.resolve(certFile);
-    });
-    
+    // Read TLS root CA
+    const caTlsRootCert: Buffer = await fsp.readFile(path.resolve(caTlsRootCertFile));
+
     // Enroll the user
-    const ca = new FabricCAServices(caEndpoint, { trustedRoots: caTlsCertFiles, verify: caTlsVerify }, caName);
+    const ca = new FabricCAServices(caEndpoint, { trustedRoots: caTlsRootCert, verify: caTlsVerify }, caName);
     const enrollment = await ca.enroll({ enrollmentID: identity, enrollmentSecret: secret });
     
     // Save credentials to disk (also create dir if it doesn't exists)
@@ -140,9 +138,9 @@ const createGatewaySigner = async (idKeyFile: string): Promise<Signer> => {
   return signers.newPrivateKeySigner(privateKey);
 }
 
-const getConfig = async (configFile: string, organization: string): Promise<config> => {
+const getConfig = async (configFile: string, organization?: string): Promise<Config> => {
   // Parse config (from environment vars or file)
-  const config: config = configFile ?
+  const config: Config = configFile ?
     (organization ?
       await parseConfig(configFile, organization) // Config file and org given
       :
@@ -157,13 +155,13 @@ const getConfig = async (configFile: string, organization: string): Promise<conf
   return config;
 }
 
-const execEnroll = async (config: config, secret: string): Promise<void> => {
+const execEnroll = async (config: Config, secret: string): Promise<void> => {
   console.log(' Enrolling... ');
-  await enroll(config.identity, config.idCertFile, config.idKeyFile, secret, config.caEndpoint, [config.caTlsCertFile], config.caTlsVerify, config.caName);
+  await enroll(config.identity, config.idCertFile, config.idKeyFile, secret, config.caEndpoint, config.caTlsRootCertFile, config.caTlsVerify, config.caName);
   console.log('Enrollment complete!');
 }
 
-const createConnection = async (config: config): Promise<connectionDetails> => {
+const createConnection = async (config: Config): Promise<connectionDetails> => {
   try {
     // Create gRPC connection
     const gRpcClient: grpc.Client = await newGrpcConnection(config.gatewayEndpoint, config.gatewayTlsCertFile, config.gatewayHostAlias);
@@ -286,6 +284,16 @@ const deleteData = async (contract: Contract, key: string): Promise<string> => {
   }
 }
 
+const listDataHistory = async (contract: Contract, key: string): Promise<string> => {
+  try {
+    const responseBytes = await contract.evaluateTransaction('listDataHistory', key);
+    const utf8Decoder = new TextDecoder();
+    const responseJson: string = utf8Decoder.decode(responseBytes);
+    return responseJson;
+  } catch (error) {
+    throw new Error(`Fabric Gateway error: ${error}`);
+  }
+}
 
 export {
   getConfig,
@@ -299,5 +307,6 @@ export {
   createData,
   listAllData,
   readData,
-  deleteData
+  deleteData,
+  listDataHistory
 }

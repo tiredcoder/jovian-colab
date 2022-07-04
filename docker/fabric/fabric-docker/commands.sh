@@ -51,7 +51,7 @@ generateCryptoFabricCA() {
   for ORG in "${ORGs[@]}"; do
     while :; do
       if [ ! -f "$FABLO_NETWORK_ROOT/fabric-config/crypto-config/fabric-ca/organizations/$ORG/tls-cert.pem" ]; then
-        sleep 1
+        sleep 3
       else
         break
       fi

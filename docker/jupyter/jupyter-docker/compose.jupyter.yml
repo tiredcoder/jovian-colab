@@ -54,6 +54,7 @@ services:
     networks:
       - demo
     environment:
+      IPFS_NODE: "ipfs.jupyter-${INSTANCE}.localhost"
       NB_UID: "${JUPYTERLAB_UID}" # The JupyterLab container image includes a script which will set the correct permissions (i.e. your user account)
       NB_GID: "${JUPYTERLAB_GID}"
       CHOWN_HOME: 'yes'

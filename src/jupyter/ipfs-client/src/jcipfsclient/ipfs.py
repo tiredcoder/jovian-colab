@@ -1,7 +1,7 @@
 # Functions to local IPFS peer and remote IPFS Cluster Pinning Service
 #
 # Docs:
-#  go-ipfs peer RPC API (v0.11.0): https://github.com/ipfs/ipfs-docs/blob/8ca256c8dd383490b5c26f5dfa0e3fe80859381c/docs/reference/http/api.md
+#  go-ipfs peer RPC API (v0.12.2): https://github.com/ipfs/ipfs-docs/blob/b7c09c34e0737c79ad172a854dc3d8c98b50da65/docs/reference/http/api.md
 #  IPFS Pinning Service API (1.0.0): https://ipfs.github.io/pinning-services-api-spec
 from . import crypto
 import sys
@@ -95,13 +95,17 @@ def getPeers(nodeApiUrl):
 
 
 # Use the experimental Pinning Service API to pin the (encrypted) file on the cluster (this will trigger the cluster to download the file via IPFS)
-def addRemotePin(pinServiceUrl, cid, user, password, pinServiceTLSCertFile):
+def addRemotePin(pinServiceUrl, cid, user, password, pinServiceTLSCertFile, origins='None'):
   try:
+    if origins == 'None':
+      req = { "cid": cid }
+    else:
+      req = { "cid": cid, "origins": origins }
     response = requests.post(
       url = pinServiceUrl + '/pins',
       auth = (user, password),
       verify = pinServiceTLSCertFile,
-      json = {"cid": cid}
+      json = req
     )
     response.raise_for_status()
     return response.json()['requestid'] # Request ID of the pin request (this is the CID)

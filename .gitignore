@@ -3,8 +3,9 @@
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
-# Generated crypto material (IPFS and Fabric)
+# Crypto material
 crypto-config
+*.pem
 
 # Fabric
 genesisblock

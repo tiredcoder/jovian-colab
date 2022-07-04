@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 SCRIPT_DIR=$(dirname "$0")
-DOCKER_IMAGE="node:14.18.3-alpine"
+DOCKER_IMAGE="node:16-alpine"
 
 echo " *** Building fabric-gw-client module using $DOCKER_IMAGE Docker container... *** "
 rm -rf "$SCRIPT_DIR/dist"

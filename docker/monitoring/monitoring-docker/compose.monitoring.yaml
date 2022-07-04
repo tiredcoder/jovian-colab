@@ -67,7 +67,7 @@ services:
 
   grafana.monitor.localhost:
     build:
-      context: ../monitoring-config/grafana/docker-image
+      context: ./grafana-image
       dockerfile: grafana.dockerfile
       args:
         GRAFANA_VERSION: "${GRAFANA_VERSION}"

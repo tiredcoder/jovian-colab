@@ -13,7 +13,7 @@ The infrastructure consists of three organizations ('A', 'B', and 'C'), two Hype
 
 ## Requirements
 The infrastructure consists of about 50 Docker containers.
- - Hardware: Tested on an x86_64 QEMU/KVM VM with a: 65GiB virtual disk (SSD backend), 10GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
+ - Hardware: Tested on an x86_64 QEMU/KVM VM with a: 65 GiB virtual disk (SSD backend), 10 GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
  - Software: See tables below.
 
 ## Versions
@@ -23,24 +23,22 @@ The infrastructure consists of the software mentioned in the table below. We use
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
 | Ubuntu Server                                      | [20.04.4 LTS](https://releases.ubuntu.com/20.04/)                         |
 | Docker                                             | [20.10.17](https://docs.docker.com/engine)                                |
-| Docker Compose                                     | [2.6.0](https://docs.docker.com/compose)                                  |
-| IPFS Peer                                          | [0.11.0](https://github.com/ipfs/go-ipfs/tree/v0.11.0)                    |
-| IPFS Cluster                                       | [0.14.2](https://github.com/ipfs/ipfs-cluster/tree/v0.14.2)               |
-| Hyperledger Fabric                                 | [2.4.1](https://hyperledger-fabric.readthedocs.io/en/release-2.4/)        |
-| Fabric Client Node.js SDK (Legacy Application API) | [2.2.11](https://github.com/hyperledger/fabric-sdk-node/tree/v2.2.11)     |
-| Fabric Chaincode Node.js SDK (Contract API)        | [2.4.1](https://github.com/hyperledger/fabric-chaincode-node/tree/v2.4.1) |
-| Fabric Gateway Node.js SDK (Application API)       | [1.0.1](https://github.com/hyperledger/fabric-gateway/tree/v1.0.1)        |
-| JupyterLab Notebook                                | [3.2.9](https://jupyterlab.readthedocs.io/en/3.2.x/)                      |
-| Firefox                                            | [100.0.2](https://www.mozilla.org/en-US/firefox/100.0.2/releasenotes/)    |
+| Docker Compose                                     | [2.6.1](https://docs.docker.com/compose)                                  |
+| IPFS Peer                                          | [0.12.2](https://github.com/ipfs/go-ipfs/tree/v0.12.2)                    |
+| IPFS Cluster                                       | [1.0.1](https://github.com/ipfs-cluster/ipfs-cluster/releases/tag/v1.0.1) |
+| Hyperledger Fabric                                 | [2.4.5](https://hyperledger-fabric.readthedocs.io/en/release-2.4/)        |
+| Fabric Client Node.js SDK (Legacy Application API) | [2.2.13](https://github.com/hyperledger/fabric-sdk-node/tree/v2.2.13)     |
+| Fabric Chaincode Node.js SDK (Contract API)        | [2.4.2](https://github.com/hyperledger/fabric-chaincode-node/tree/v2.4.2) |
+| Fabric Gateway Node.js SDK (Application API)       | [1.1.0](https://github.com/hyperledger/fabric-gateway/tree/v1.1.0)        |
+| JupyterLab Notebook                                | [3.4.3](https://jupyterlab.readthedocs.io/en/3.4.x/)                      |
+| Firefox                                            | [101.0.1](https://www.mozilla.org/en-US/firefox/101.0.1/releasenotes/)    |
 
 ### Node.js
-The Hyperledger Fabric Node.js SDKs require different versions:
-
 | Fabric SDK                      | Node.js Version                                                                         |
 | ------------------------------- | --------------------------------------------------------------------------------------- |
-| Client (Legacy Application API) | [12](https://github.com/hyperledger/fabric-sdk-node/tree/v2.2.11#build-and-test)        |
-| Chaincode (Contract API)        | [16](https://github.com/hyperledger/fabric-chaincode-node/blob/v2.4.1/COMPATIBILITY.md) |
-| Gateway (Application API)       | [14](https://github.com/hyperledger/fabric-gateway/tree/v1.0.1#install-pre-reqs)        |
+| Client (Legacy Application API) | [16](https://github.com/hyperledger/fabric-sdk-node/releases/tag/v2.2.12)               |
+| Chaincode (Contract API)        | [16](https://github.com/hyperledger/fabric-chaincode-node/blob/v2.4.2/COMPATIBILITY.md) |
+| Gateway (Application API)       | [16](https://github.com/hyperledger/fabric-gateway/releases/tag/v1.1.0)                 |
 
 As per the [documentation](https://github.com/hyperledger/fabric/blob/8a4c7f3bdb17c18fe6c56ff7e3e2fc008e223005/docs/source/sdk_chaincode.md#fabric-contract-apis-and-application-apis), we use the client SDK (legacy) for CA administrative actions and the Gateway SDK as the actual client (i.e. JupyterLab).
 
@@ -76,7 +74,8 @@ The following network sockets are used on the Docker host machine (configured vi
    - Fabric Gateway: 127.0.0.1:7051
    - IPFS bootstrap node: 127.0.0.1:4001
  - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
- - JupyterLab Notebook Web UI: 127.0.0.1:8888
+ - JupyterLab Notebook local instances Web UI (via reverse proxy): 127.0.0.1:8888
+ - JupyterLab Notebook external instance Web UI: 127.0.0.2:8889
 
 ## Possibly change UIDs and GIDs
 Several directories will be mounted into the containers. You can specify your user ID and group ID via the .env files. This allows for data sharing between the containers and the Docker host.
@@ -165,8 +164,8 @@ cd jupyter-external
 ```
 
 ### Access JupyterLab from your web browser
-Note that we are using port 8889 as to prevent a possible collision when using the SSH tunnel above to access the Jupyterlab instances that are running on the server.
-[http://127.0.0.1:8889](http://127.0.0.1:8889)
+Note that we are using 127.0.0.2:8889 as to prevent a possible port and session cookie collision when using the SSH tunnel above to access the Jupyterlab instances that are running on the server.
+[http://127.0.0.2:8889](http://127.0.0.2:8889)
 
 ## Verify that Docker is running
 ```

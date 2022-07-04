@@ -23,6 +23,7 @@ from Crypto.Random import get_random_bytes
 
 # Generate key for specified cipher
 def genKey(cipherMode='ChaCha20'):
+  if cipherMode == 'plain': key = b'\x00' # static 1 Byte key (all zeros; i.e. we don't use a key)
   if cipherMode == 'ChaCha20': key = get_random_bytes(32) # random 256 bit key
   if cipherMode == 'Salsa20': key = get_random_bytes(32) # random 256 bit key
   if cipherMode == 'AES_256_CTR': key = get_random_bytes(32) # random 256 bit key
@@ -41,6 +42,11 @@ def encrypt(infileObj, base64Key, chunkSize, cipherMode='ChaCha20'):
   try:
     key_ascii_bytes = base64Key.encode("ascii")
     key_bytes = base64.b64decode(key_ascii_bytes)
+
+    if cipherMode == 'plain':
+      # No encryption
+      while chunk := infileObj.read(chunkSize):
+        yield chunk
 
     if cipherMode == 'ChaCha20':
       # Fixed 64 bit nonce (used as counter; every file uses a unique key)
@@ -80,6 +86,11 @@ def decrypt(responseObj, outfile, base64Key, chunkSize, cipherMode='ChaCha20'):
     with open(outfile, 'wb') as fileout:
       key_ascii_bytes = base64Key.encode("ascii")
       key_bytes = base64.b64decode(key_ascii_bytes)
+
+      if cipherMode == 'plain':
+        # No decryption
+        for chunk in responseObj.iter_content(chunk_size = chunkSize):
+          fileout.write(chunk)
 
       if cipherMode == 'ChaCha20':
         nonce_bytes = b'\x00' * 8 # Fixed nonce; see encrypt notes

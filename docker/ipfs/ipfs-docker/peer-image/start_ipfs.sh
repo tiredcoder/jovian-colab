@@ -3,7 +3,7 @@
 #   - Added private network support
 #   - Added mDNS toggle support
 #   - Added AutoRelay toggle support
-# Upstream: https://github.com/ipfs/go-ipfs/blob/v0.11.0/bin/container_daemon
+# Upstream: https://github.com/ipfs/go-ipfs/blob/v0.12.2/bin/container_daemon
 set -e
 user=ipfs
 repo="$IPFS_PATH"
@@ -68,9 +68,9 @@ if [ ! -z "$IPFS_MDNS" ]; then
 fi
 
 # Toggle AutoRelay (default is false)
-# https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/experimental-features.md#autorelay
-# https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/config.md#swarmrelayclient
-# https://github.com/ipfs/go-ipfs/blob/v0.11.0/docs/config.md#swarmrelayservice
+# https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/experimental-features.md#autorelay
+# https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayclient
+# https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayservice
 if [ ! -z "$IPFS_AUTORELAY" ]; then
   if [ "$IPFS_AUTORELAY" = "true" ] || [ "$IPFS_AUTORELAY" = "1" ] || [ "$IPFS_AUTORELAY" = "yes" ]; then
     echo "Enabling AutoRelay client..."

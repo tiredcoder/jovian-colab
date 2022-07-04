@@ -17,6 +17,7 @@ const { Wallets, x509Identity } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const yaml = require('js-yaml');
 const fs = require('fs');
+const path = require('path');
 const readline = require('readline');
 const minimist = require('minimist');
 
@@ -43,8 +44,9 @@ async function enrollAdmin(wallet, adminUsername, connectionProfileFile, organiz
       throw `No certificate authority found for organization "${organization}" in connection profile "${connectionProfileFile}"`;
     }
     const caInfo = connectionProfile.certificateAuthorities[certAuth];
-    const caTLSCACerts = caInfo.tlsCACerts.pem;
-    const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
+    const caTlsRootCert = fs.readFileSync(path.resolve(caInfo.tlsCACerts.path), 'utf8');
+    const caTlsVerify = Boolean(caInfo.httpOptions.verify);
+    const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTlsRootCert, verify: caTlsVerify }, caInfo.caName);
 
     // Ask for the CA admin user's password
     const rl = readline.createInterface({
@@ -114,8 +116,9 @@ async function registerUser(wallet, adminUsername, connectionProfileFile, organi
       throw `No certificate authority found for organization "${organization}" in connection profile "${connectionProfileFile}"`;
     }
     const caInfo = connectionProfile.certificateAuthorities[certAuth];
-    const caTLSCACerts = caInfo.tlsCACerts.pem;
-    const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
+    const caTlsRootCert = fs.readFileSync(path.resolve(caInfo.tlsCACerts.path), 'utf8');
+    const caTlsVerify = Boolean(caInfo.httpOptions.verify);
+    const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTlsRootCert, verify: caTlsVerify }, caInfo.caName);
 
     // Register the user
     const user = {
@@ -129,7 +132,7 @@ async function registerUser(wallet, adminUsername, connectionProfileFile, organi
     const secret = await ca.register(user, adminUser);
     console.log(`Successfully registered user "${username}" in organization "${organization}"`);
     console.log(`Secret of user "${username}": "${secret}"`);
-    console.log('***SECURITY NOTE***: The secret is normally not visible to the CA admin (i.e. the secret is *only* send to the user)!');
+    console.log('***SECURITY NOTE***: The secret is normally not visible to the CA operator (i.e. the secret is *only* send to the user)!');
 
   } catch (error) {
     console.error(`Failed to register user "${username}": ${error}`);

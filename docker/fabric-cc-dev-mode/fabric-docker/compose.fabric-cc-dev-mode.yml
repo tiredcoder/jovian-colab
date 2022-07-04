@@ -13,29 +13,32 @@ services:
   tools.fabric-ccdev.localhost:
     image: "hyperledger/fabric-tools:${FABRIC_VERSION}"
     container_name: tools.fabric-ccdev.localhost
+    hostname: tools.fabric-ccdev.localhost
     tty: true
     working_dir: /var/hyperledger/config
     command: /bin/bash
     user: "${FABRIC_TOOLS_UID}:${FABRIC_TOOLS_GID}" # Docker host UID & GID (i.e. your user account; needed for bind mounts)
     volumes:
-      - ./fabric-config/:/var/hyperledger/config
+      - ../fabric-config/:/var/hyperledger/config
     networks:
       - demo
 
   cc-builder-nodejs-image.fabric-ccdev.localhost:
     build: # Own Node.js image used for building and running the chaincode
-      context:  ../fabric/fabric-docker/nodejs-image/
+      context:  ../../fabric/fabric-docker/nodejs-image/
       dockerfile: fabric-nodejs.dockerfile
       args:
         NODE_VERSION: "${CHAINCODE_NODE_VERSION}"
     image: "${COMPOSE_PROJECT_NAME}-nodejs:${CHAINCODE_NODE_VERSION}-alpine"
     container_name: cc-builder-nodejs-image.fabric-ccdev.localhost
+    hostname: cc-builder-nodejs-image.fabric-ccdev.localhost
     command: /bin/true # Placeholder; we only use this container to enforce the image build
     networks:
       - demo
 
   orderer0.fabric-ccdev.localhost:
     container_name: orderer0.fabric-ccdev.localhost
+    hostname: orderer0.fabric-ccdev.localhost
     image: hyperledger/fabric-orderer:${FABRIC_VERSION}
     environment:
       - FABRIC_CFG_PATH=/var/hyperledger/config
@@ -44,12 +47,13 @@ services:
     working_dir: /var/hyperledger/config
     command: orderer
     volumes:
-      - ./fabric-config/:/var/hyperledger/config
+      - ../fabric-config/:/var/hyperledger/config
     networks:
       - demo
   
   peer0.fabric-ccdev.localhost:
     container_name: peer0.fabric-ccdev.localhost
+    hostname: peer0.fabric-ccdev.localhost
     image: hyperledger/fabric-peer:${FABRIC_VERSION}
     environment:
       - FABRIC_CFG_PATH=/var/hyperledger/config
@@ -60,6 +64,6 @@ services:
     working_dir: /var/hyperledger/config
     command: peer node start --peer-chaincodedev=true
     volumes:
-      - ./fabric-config/:/var/hyperledger/config
+      - ../fabric-config/:/var/hyperledger/config
     networks:
       - demo

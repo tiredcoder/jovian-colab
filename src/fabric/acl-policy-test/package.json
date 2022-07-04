@@ -1,17 +1,16 @@
 {
-  "name": "fabric_jovian-colab-ca-client",
+  "name": "fabric_jovian-colab-acl-policy-test",
   "version": "1.0.0",
-  "description": "Client app for registering identities in Fabric CA",
+  "description": "Client app for testing ACL policies in Fabric",
   "keywords": [
-    "Hyperledger Fabric",
-    "fabric-ca"
+    "Hyperledger Fabric"
   ],
   "license": "Apache-2.0",
   "author": "Rik Janssen",
   "private": true,
-  "main": "registerUser.js",
+  "main": "testPolicy.js",
   "scripts": {
-    "test": "node registerUser.js --wallet ./wallet --admin admin --profile profile.yaml --org orgA --user test",
+    "test": "node testPolicy.js --wallet ./wallet --profile /mnt/fabric-profiles/connection-profile-orga.yaml --user admin --channel consortium-chain",
     "dist": "npm pack .",
     "build": "echo \"No need to build\""
   },
@@ -20,7 +19,6 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "fabric-ca-client": "2.2.13",
     "fabric-network": "2.2.13",
     "js-yaml": "^4.1.0",
     "minimist": "^1.2.6"

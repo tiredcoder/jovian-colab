@@ -49,10 +49,12 @@ Organizations:
               Type: Signature
               Rule: "OR('MSPorgA.member')"
 
+      OrdererEndpoints:
+          - "orderer0.consortium.orga.fabric.localhost:7050"
+
       AnchorPeers:
           - Host: peer0.orga.fabric.localhost
             Port: 7051
-
           - Host: peer1.orga.fabric.localhost
             Port: 7051
 
@@ -75,10 +77,41 @@ Organizations:
               Type: Signature
               Rule: "OR('MSPorgB.member')"
 
+      OrdererEndpoints:
+          - "orderer0.consortium.orgb.fabric.localhost:7050"
+
       AnchorPeers:
           - Host: peer0.orgb.fabric.localhost
             Port: 7051
+          - Host: peer1.orgb.fabric.localhost
+            Port: 7051
 
+    - &orgBOnly
+      Name: MSPorgB
+      ID: MSPorgB
+      MSPDir: crypto-config/peerOrganizations/orgb.fabric.localhost/msp
+
+      Policies:
+          Readers:
+              Type: Signature
+              Rule: "OR('MSPorgB.member')"
+          Writers:
+              Type: Signature
+              Rule: "OR('MSPorgB.member')"
+          Admins:
+              Type: Signature
+              Rule: "OR('MSPorgB.admin')"
+          Endorsement:
+              Type: Signature
+              Rule: "OR('MSPorgB.member')"
+
+      OrdererEndpoints:
+          - "orderer0.orgb.orgb.fabric.localhost:7050"
+          - "orderer1.orgb.orgb.fabric.localhost:7050"
+
+      AnchorPeers:
+          - Host: peer0.orgb.fabric.localhost
+            Port: 7051
           - Host: peer1.orgb.fabric.localhost
             Port: 7051
 
@@ -101,10 +134,12 @@ Organizations:
               Type: Signature
               Rule: "OR('MSPorgC.member')"
 
+      OrdererEndpoints:
+          - "orderer0.consortium.orgc.fabric.localhost:7050"
+
       AnchorPeers:
           - Host: peer0.orgc.fabric.localhost
             Port: 7051
-
           - Host: peer1.orgc.fabric.localhost
             Port: 7051
 
@@ -129,6 +164,9 @@ Application: &ApplicationDefaults
         Endorsement:
             Type: ImplicitMeta
             Rule: "MAJORITY Endorsement"
+        BlockEvents:
+            Type: ImplicitMeta
+            Rule: "ANY Admins"
     Capabilities:
         <<: *ApplicationCapabilities
 
@@ -259,13 +297,13 @@ Profiles:
         Orderer:
             <<: *OrgbDefaults
             Organizations:
-                - *orgB
+                - *orgBOnly
             Capabilities:
                 <<: *OrdererCapabilities
         Consortiums:
             SampleConsortium:
                 Organizations:
-                    - *orgB
+                    - *orgBOnly
 
     # Profile used to create channeltx for consortium-chain #
     ConsortiumChain:
@@ -287,6 +325,8 @@ Profiles:
                     - *orgC
         Application:
             <<: *ApplicationDefaults
+            ACLs:
+                event/Block: /Channel/Application/BlockEvents
             Organizations:
                 - *orgA
                 - *orgB
@@ -298,15 +338,17 @@ Profiles:
         Orderer:
             <<: *OrgbDefaults
             Organizations:
-                - *orgB
+                - *orgBOnly
             Capabilities:
                 <<: *ApplicationCapabilities
         Consortium: SampleConsortium
         Consortiums:
             SampleConsortium:
                 Organizations:
-                    - *orgB
+                    - *orgBOnly
         Application:
             <<: *ApplicationDefaults
+            ACLs:
+                event/Block: /Channel/Application/BlockEvents
             Organizations:
-                - *orgB
+                - *orgBOnly

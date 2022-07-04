@@ -59,6 +59,8 @@ services:
     hostname: peer0.pnet0.orga.ipfs.localhost
     volumes:
       - ../ipfs-data/orga/pnet0/peer0:/data/ipfs
+    ports:
+      - "${IPFS_ORGA_PNET0_PEER0_LIBP2P_SOCKET}:4001" # Allow access from remote JupyterLab (SSH tunnel)
   cluster0.pnet0.orga.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster0.pnet0.orga.ipfs.localhost
@@ -74,8 +76,6 @@ services:
     volumes:
       - ../ipfs-data/orga/pnet0/cluster0:/data/ipfs-cluster
       - ../crypto-config/orga/pnet0/cluster0:/data/crypto-config:ro
-    ports:
-      - "${IPFS_ORGA_PNET0_PEER0_LIBP2P_SOCKET}:4001" # Allow access from remote JupyterLab (SSH tunnel)
   peer1.pnet0.orga.ipfs.localhost:
     <<: *default-ipfs-peer
     container_name: peer1.pnet0.orga.ipfs.localhost

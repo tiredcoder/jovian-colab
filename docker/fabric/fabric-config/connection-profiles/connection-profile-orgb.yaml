@@ -172,7 +172,7 @@ certificateAuthorities:
       path: >-
         ../crypto-config/peerOrganizations/orga.fabric.localhost/ca/ca.orga.fabric.localhost-cert.pem
     httpOptions:
-      verify: false
+      verify: true
   ca.orgb.fabric.localhost:
     url: https://ca.orgb.fabric.localhost:7054
     caName: ca.orgb.fabric.localhost
@@ -180,7 +180,7 @@ certificateAuthorities:
       path: >-
         ../crypto-config/peerOrganizations/orgb.fabric.localhost/ca/ca.orgb.fabric.localhost-cert.pem
     httpOptions:
-      verify: false
+      verify: true
   ca.orgc.fabric.localhost:
     url: https://ca.orgc.fabric.localhost:7054
     caName: ca.orgc.fabric.localhost
@@ -188,4 +188,4 @@ certificateAuthorities:
       path: >-
         ../crypto-config/peerOrganizations/orgc.fabric.localhost/ca/ca.orgc.fabric.localhost-cert.pem
     httpOptions:
-      verify: false
+      verify: true
