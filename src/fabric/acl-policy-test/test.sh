@@ -13,7 +13,7 @@ docker run -d -t --name "$CONTAINER" --network "$DOCKER_NETWORK" -v "$(readlink 
 docker exec -it --user=root "$CONTAINER" sh -c "npm install -g npm@latest && deluser --remove-home node && addgroup -S node -g $(id -g) && adduser -S -G node -u $(id -u) node"
 docker exec -it --user=node "$CONTAINER" sh -c 'npm install'
 
-echo -e "\n\nReady! Starting interactive shell in container.\nPlease add the user's credentials to the wallet and then run 'testPolicy.js'\n"
+echo -e "\n\nReady! Starting interactive shell in container.\nPlease add the user's credentials to the wallet (see the 'wallet-id-example.id' file, the filename has to be the same as the username) and then run 'testPolicy.js'\n"
 docker exec -it --user=node "$CONTAINER" sh
 
 docker kill "$CONTAINER" && docker rm "$CONTAINER"

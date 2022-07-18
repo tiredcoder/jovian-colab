@@ -48,6 +48,7 @@ services:
     init: false # Image is already using 'tini' by default
     volumes:
       - ../../../src/jupyter/notebook:/mnt/notebook:ro # Read-only access to the notebooks
+      - ../jupyter-data/notebook/${COMPOSE_PROJECT_NAME}:/home/jovyan/work/local # Write access to the host (separate directory per JupyterLab instance)
       - ../jupyter-data/ipfs/${COMPOSE_PROJECT_NAME}:/mnt/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
       - ../../fabric/fabric-config/crypto-config:/mnt/crypto-config/fabric:ro
       - ../../ipfs/crypto-config:/mnt/crypto-config/ipfs:ro

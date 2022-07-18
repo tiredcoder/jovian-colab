@@ -151,6 +151,11 @@ generateCryptoFabricCA() {
     cp "$FABLO_NETWORK_ROOT/fabric-config/crypto-config/fabric-ca/organizations/$ORG/ca-cert.pem" "$FABLO_NETWORK_ROOT/fabric-config/crypto-config/peerOrganizations/$ORG/ca/ca.$ORG-cert.pem"   
   done
 
+  # Concatenate all Fabric CA root certs in one file
+  for ORG in "${ORGs[@]}"; do
+    cat "$FABLO_NETWORK_ROOT/fabric-config/crypto-config/fabric-ca/organizations/$ORG/ca-cert.pem" >> "$FABLO_NETWORK_ROOT/fabric-config/crypto-config/fabric-ca/ca-root-certs.pem"
+  done
+
   # Enrolling the peers (each org has the same number of peers)
   for ORG in "${ORGs[@]}"; do
     printItalics "Enrolling the peers for $ORG" "U1F512"

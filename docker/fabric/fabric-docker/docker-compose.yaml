@@ -41,14 +41,17 @@ services:
       - CORE_PEER_ADDRESS=peer0.orga.fabric.localhost:7051
       # enabled TLS
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/cli/crypto/tlsca/tlsca.orga.fabric.localhost-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - TLS_CA_CERT_PATH=/var/hyperledger/cli/crypto-orderer/tlsca.orga.fabric.localhost-cert.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem # Node.js root certificates overwrite
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem # Golang root certificates overwrite
     working_dir: /var/hyperledger/cli/
     command: /bin/bash
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-docker/scripts/cli:/var/hyperledger/cli/scripts/
       - ../fabric-config/config:/var/hyperledger/cli/config/ # genesis.block and channel.tx's
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost:/var/hyperledger/cli/crypto/
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/tlsca/tlsca.orga.fabric.localhost-cert.pem:/var/hyperledger/cli/crypto-orderer/tlsca.orga.fabric.localhost-cert.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/tlsca/tlsca.orgb.fabric.localhost-cert.pem:/var/hyperledger/cli/crypto-orderer/tlsca.orgb.fabric.localhost-cert.pem:ro
@@ -85,14 +88,17 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/orderer
     command: orderer
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/msp/:/var/hyperledger/orderer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/orderer0.consortium.orga.fabric.localhost/tls/:/var/hyperledger/orderer/tls
     networks:
@@ -130,11 +136,14 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer0.orga.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
@@ -176,11 +185,14 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer1.orga.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/peers/peer1.orga.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
@@ -205,14 +217,17 @@ services:
       - CORE_PEER_ADDRESS=peer0.orgb.fabric.localhost:7051
       # enabled TLS
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/cli/crypto/tlsca/tlsca.orgb.fabric.localhost-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - TLS_CA_CERT_PATH=/var/hyperledger/cli/crypto-orderer/tlsca.orgb.fabric.localhost-cert.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/cli/
     command: /bin/bash
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-docker/scripts/cli:/var/hyperledger/cli/scripts/
       - ../fabric-config/config:/var/hyperledger/cli/config/ # genesis.block and channel.tx's
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost:/var/hyperledger/cli/crypto/
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/tlsca/tlsca.orga.fabric.localhost-cert.pem:/var/hyperledger/cli/crypto-orderer/tlsca.orga.fabric.localhost-cert.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/tlsca/tlsca.orgb.fabric.localhost-cert.pem:/var/hyperledger/cli/crypto-orderer/tlsca.orgb.fabric.localhost-cert.pem:ro
@@ -249,14 +264,17 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/orderer
     command: orderer
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.consortium.orgb.fabric.localhost/msp/:/var/hyperledger/orderer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.consortium.orgb.fabric.localhost/tls/:/var/hyperledger/orderer/tls
     networks:
@@ -282,14 +300,17 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/orderer
     command: orderer
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.orgb.orgb.fabric.localhost/msp/:/var/hyperledger/orderer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer0.orgb.orgb.fabric.localhost/tls/:/var/hyperledger/orderer/tls
     networks:
@@ -315,14 +336,17 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/orderer
     command: orderer
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer1.orgb.orgb.fabric.localhost/msp/:/var/hyperledger/orderer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/orderer1.orgb.orgb.fabric.localhost/tls/:/var/hyperledger/orderer/tls
     networks:
@@ -360,11 +384,14 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer0.orgb.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer0.orgb.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
@@ -404,11 +431,14 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer1.orgb.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/peers/peer1.orgb.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
@@ -433,14 +463,17 @@ services:
       - CORE_PEER_ADDRESS=peer0.orgc.fabric.localhost:7051
       # enabled TLS
       - CORE_PEER_TLS_ENABLED=true
-      - CORE_PEER_TLS_ROOTCERT_FILE=/var/hyperledger/cli/crypto/tlsca/tlsca.orgc.fabric.localhost-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - TLS_CA_CERT_PATH=/var/hyperledger/cli/crypto-orderer/tlsca.orgc.fabric.localhost-cert.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/cli/
     command: /bin/bash
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
       - ../fabric-docker/scripts/cli:/var/hyperledger/cli/scripts/
       - ../fabric-config/config:/var/hyperledger/cli/config/ # genesis.block and channel.tx's
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost:/var/hyperledger/cli/crypto/
       - ../fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/tlsca/tlsca.orga.fabric.localhost-cert.pem:/var/hyperledger/cli/crypto-orderer/tlsca.orga.fabric.localhost-cert.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgb.fabric.localhost/tlsca/tlsca.orgb.fabric.localhost-cert.pem:/var/hyperledger/cli/crypto-orderer/tlsca.orgb.fabric.localhost-cert.pem:ro
@@ -477,14 +510,17 @@ services:
       - ORDERER_GENERAL_TLS_ENABLED=true
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
-      - ORDERER_GENERAL_TLS_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
-      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/var/hyperledger/orderer/tls/ca.crt
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /var/hyperledger/orderer
     command: orderer
     volumes:
       - ../fabric-config/config/:/var/hyperledger/config
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/msp/:/var/hyperledger/orderer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/orderer0.consortium.orgc.fabric.localhost/tls/:/var/hyperledger/orderer/tls
     networks:
@@ -522,11 +558,14 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer0.orgc.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users
@@ -566,11 +605,14 @@ services:
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/peer/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/peer/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/peer/tls/ca.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - NODE_EXTRA_CA_CERTS=/mnt/fabric-ca-crypto/ca-root-certs.pem
+      - SSL_CERT_FILE=/mnt/fabric-ca-crypto/ca-root-certs.pem
     working_dir: /etc/hyperledger/fabric/peer/
     command: peer node start
     volumes:
       - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../fabric-config/crypto-config/fabric-ca/ca-root-certs.pem:/mnt/fabric-ca-crypto/ca-root-certs.pem:ro
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer1.orgc.fabric.localhost/msp:/etc/hyperledger/fabric/peer/msp
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/peers/peer1.orgc.fabric.localhost/tls:/etc/hyperledger/fabric/peer/tls
       - ../fabric-config/crypto-config/peerOrganizations/orgc.fabric.localhost/users:/etc/hyperledger/fabric/peer/msp/users

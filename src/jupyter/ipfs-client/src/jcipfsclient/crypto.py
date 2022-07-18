@@ -15,10 +15,11 @@
 #  - We are not using a MAC (AEAD) because we're relying on IPFS (which uses immutable file blocks).
 #  - To do / Future work: All three ciphers allow for parallelization (i.e. multi-threaded encryption/decryption).
 #
-# Docs: https://pycryptodome.readthedocs.io/en/v3.14.1/
+# Docs: https://pycryptodome.readthedocs.io/en/v3.15.0/
 import base64
 from Crypto.Cipher import ChaCha20, Salsa20, AES
 from Crypto.Random import get_random_bytes
+from io import BytesIO
 
 
 # Generate key for specified cipher
@@ -37,7 +38,7 @@ def incrementBytes(strBytes, strSize):
   return strInt.to_bytes(strSize, byteorder='big', signed=False)
 
 
-# Encrypt open file object using specified cipher
+# Encrypt open file object using specified cipher and yields encrypted chucks
 def encrypt(infileObj, base64Key, chunkSize, cipherMode='ChaCha20'):
   try:
     key_ascii_bytes = base64Key.encode("ascii")
@@ -80,7 +81,7 @@ def encrypt(infileObj, base64Key, chunkSize, cipherMode='ChaCha20'):
     raise Exception("Error while encrypting using {cipherMode}: {error}'".format(cipherMode = cipherMode, error = str(e)))
 
 
-# Decrypt data from given HTTP response object using specified cipher
+# Decrypt data from given HTTP response object using specified cipher and writes to file
 def decrypt(responseObj, outfile, base64Key, chunkSize, cipherMode='ChaCha20'):
   try:
     with open(outfile, 'wb') as fileout:
@@ -91,24 +92,31 @@ def decrypt(responseObj, outfile, base64Key, chunkSize, cipherMode='ChaCha20'):
         # No decryption
         for chunk in responseObj.iter_content(chunk_size = chunkSize):
           fileout.write(chunk)
-
-      if cipherMode == 'ChaCha20':
-        nonce_bytes = b'\x00' * 8 # Fixed nonce; see encrypt notes
-        for chunk in responseObj.iter_content(chunk_size = chunkSize):
-          cipher = ChaCha20.new(key = key_bytes, nonce = nonce_bytes)
-          plaintextChunk = cipher.decrypt(chunk)
-          assert len(plaintextChunk) == len(chunk)
-          nonce_bytes = incrementBytes(nonce_bytes, 8)
-          fileout.write(plaintextChunk)
-
-      if cipherMode == 'Salsa20':
-        nonce_bytes = b'\x00' * 8 # Fixed nonce; see encrypt notes
-        for chunk in responseObj.iter_content(chunk_size = chunkSize):
-          cipher = Salsa20.new(key = key_bytes, nonce = nonce_bytes)
-          plaintextChunk = cipher.decrypt(chunk)
-          assert len(plaintextChunk) == len(chunk)
-          nonce_bytes = incrementBytes(nonce_bytes, 8)
-          fileout.write(plaintextChunk)
+      
+      if cipherMode == 'ChaCha20' or cipherMode == 'Salsa20':
+        with BytesIO() as buffer:
+          nonce_bytes = b'\x00' * 8 # Fixed nonce; see encrypt notes
+          def decrypt_chacha_salsa():
+            nonlocal nonce_bytes
+            if cipherMode == 'ChaCha20': cipher = ChaCha20.new(key = key_bytes, nonce = nonce_bytes)
+            if cipherMode == 'Salsa20': cipher = Salsa20.new(key = key_bytes, nonce = nonce_bytes)
+            plaintextChunk = cipher.decrypt((buffer.getbuffer())[0:buffer.tell()]) # Get the size of the buffer's content, not the buffer size
+            assert len(plaintextChunk) == len((buffer.getbuffer())[0:buffer.tell()])
+            fileout.write(plaintextChunk)
+            nonce_bytes = incrementBytes(nonce_bytes, 8)
+          for chunk in responseObj.iter_content(chunk_size = chunkSize):
+            # The nonce is linked to chunk size, but the HTTP response chunks might differ (e.g. nonce is incremented for a chunk size of 10MiB, but we get HTTP responses of 4KiB)
+            # We use an in-memory buffer to match the chunk size (i.e. buffer the HTTP responses until we reach the desired chunk size)
+            if buffer.tell() + len(chunk) > chunkSize:
+              bufferFree = chunkSize - buffer.tell()
+              buffer.write(chunk[0:bufferFree])
+              decrypt_chacha_salsa()
+              buffer.flush()
+              buffer.seek(0)
+              buffer.write(chunk[bufferFree:])
+            else:
+              buffer.write(chunk)
+          decrypt_chacha_salsa()
 
       if cipherMode == 'AES_256_CTR':
         ivSpec = b'\x00' * 16 # Counter only; see encrypt notes
@@ -117,5 +125,37 @@ def decrypt(responseObj, outfile, base64Key, chunkSize, cipherMode='ChaCha20'):
           plaintextChunk = cipher.decrypt(chunk)
           assert len(plaintextChunk) == len(chunk)
           fileout.write(plaintextChunk)
+  except Exception as e:
+    raise Exception("Error while decrypting using {cipherMode}: {error}'".format(cipherMode = cipherMode, error = str(e)))
+
+
+# Decrypt data from given file object using specified cipher and yields decrypted chucks
+def decrypt_from_file(infileObj, base64Key, chunkSize, cipherMode='ChaCha20'):
+  try:
+    key_ascii_bytes = base64Key.encode("ascii")
+    key_bytes = base64.b64decode(key_ascii_bytes)
+
+    if cipherMode == 'plain':
+      # No decryption
+      while chunk := infileObj.read(chunkSize):
+        yield chunk
+
+    if cipherMode == 'ChaCha20' or cipherMode == 'Salsa20':
+      nonce_bytes = b'\x00' * 8 # Fixed nonce; see encrypt notes
+      while chunk := infileObj.read(chunkSize):
+        if cipherMode == 'ChaCha20': cipher = ChaCha20.new(key = key_bytes, nonce = nonce_bytes)
+        if cipherMode == 'Salsa20': cipher = Salsa20.new(key = key_bytes, nonce = nonce_bytes)
+        plaintextChunk = cipher.decrypt(chunk)
+        assert len(plaintextChunk) == len(chunk)
+        nonce_bytes = incrementBytes(nonce_bytes, 8)
+        yield plaintextChunk
+
+    if cipherMode == 'AES_256_CTR':
+      ivSpec = b'\x00' * 16 # Counter only; see encrypt notes
+      cipher = AES.new(key = key_bytes, mode = AES.MODE_CTR, initial_value = ivSpec, nonce = b'')
+      while chunk := infileObj.read(chunkSize):
+        plaintextChunk = cipher.decrypt(chunk)
+        assert len(plaintextChunk) == len(chunk)
+        yield plaintextChunk
   except Exception as e:
     raise Exception("Error while decrypting using {cipherMode}: {error}'".format(cipherMode = cipherMode, error = str(e)))
