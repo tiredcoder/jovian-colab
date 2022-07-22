@@ -14,7 +14,7 @@ networks:
 
 services:
   ipfs.jupyter.localhost:
-    build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
+    build: # Own IPFS image with private network bootstrap, mDNS toggle, and RelayClient support
       context: ../../ipfs/ipfs-docker/peer-image/
       dockerfile: ipfs-peer.dockerfile
       args:
@@ -64,3 +64,6 @@ services:
       RESTARTABLE: 'yes'
       NOTEBOOK_ARGS: "--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.allow_origin='*' --ServerApp.base_url=/notebook.jupyter-${INSTANCE}.localhost/"
       LOGSPOUT: 'ignore'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "notebook.jupyter-ext.localhost:host-gateway"

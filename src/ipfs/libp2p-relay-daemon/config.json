@@ -1,0 +1,31 @@
+{
+  "RelayV2": {
+    "Enabled": false
+  },
+  "RelayV1": {
+    "Enabled": true,
+    "Resources": {
+      "MaxCircuits": 1024,
+      "MaxCircuitsPerPeer": 64,
+      "BufferSize": 4096
+    }
+  },
+  "Network": {
+    "ListenAddrs": [
+      "/ip4/0.0.0.0/tcp/4002"
+    ],
+    "AnnounceAddrs": [],
+    "BootstrapPeers": []
+  },
+  "Daemon": {
+    "PprofPort": -1
+  },
+  "ACL": {
+    "AllowSubnets": [
+      "127.0.0.0/8",
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ]
+  }
+}

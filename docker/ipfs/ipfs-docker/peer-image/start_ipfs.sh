@@ -2,7 +2,7 @@
 # ! MODIFIED BY RIK JANSSEN: !
 #   - Added private network support
 #   - Added mDNS toggle support
-#   - Added AutoRelay toggle support
+#   - Added RelayClient support
 # Upstream: https://github.com/ipfs/go-ipfs/blob/v0.12.2/bin/container_daemon
 set -e
 user=ipfs
@@ -67,15 +67,20 @@ if [ ! -z "$IPFS_MDNS" ]; then
   fi
 fi
 
-# Toggle AutoRelay (default is false)
-# https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/experimental-features.md#autorelay
+# Enable the relay client using static relays (default is false)
 # https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayclient
-# https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayservice
-if [ ! -z "$IPFS_AUTORELAY" ]; then
-  if [ "$IPFS_AUTORELAY" = "true" ] || [ "$IPFS_AUTORELAY" = "1" ] || [ "$IPFS_AUTORELAY" = "yes" ]; then
-    echo "Enabling AutoRelay client..."
-    ipfs config --json Swarm.RelayClient.Enabled true
-  fi
+if [ ! -z "$IPFS_CLIENT_RELAYS" ]; then
+  echo "Enabling relay client..."
+  ipfs config --bool Swarm.RelayClient.Enabled 1
+  echo 'Forcing reachability as private (simulate NAT)...'
+  ipfs config Internal.Libp2pForceReachability private
+  echo "Adding static relays..."
+  RELAYS='['
+  for RELAY in $(echo "$IPFS_CLIENT_RELAYS" | tr ';' '\n'); do
+    RELAYS="${RELAYS}\"${RELAY}\","
+  done
+  RELAYS="${RELAYS%?}]"
+  ipfs config --json Swarm.RelayClient.StaticRelays "$RELAYS"
 fi
 
 # Bootstrap Private Network
@@ -86,6 +91,8 @@ fi
 if [ ! -z "$IPFS_PNET_BOOTSTRAP_PEERS" ]; then
   echo "Bootstrapping private network..."
   if [ "$IPFS_PNET_BOOTSTRAP_PEERS" = "init" ]; then
+    echo 'Forcing reachability as public (the bootstrap node can also serve as a v2 relay)...'
+    ipfs config Internal.Libp2pForceReachability public
     echo -e "Getting peer ID of bootstrap node...\n!!! BOOTSTRAP NODE PEER ID !!!\n$(ipfs id)"
     exit 0
   else

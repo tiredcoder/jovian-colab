@@ -59,7 +59,7 @@ networkUp() {
     (cd "$JUPYTER_NETWORK_ROOT"/jupyter-docker && env JUPYTERLAB_UID=$JUPYTERLAB_UID JUPYTERLAB_GID=$JUPYTERLAB_GID COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}-$i" INSTANCE="$i" docker-compose up -d)
 
     echo "Copying notebooks for instance $i..."
-    docker exec -i "notebook.jupyter-$i.localhost" sh -c "cp -r /mnt/notebook/* /home/jovyan/work/local/ && chown -R jovyan:jovyan /home/jovyan"
+    docker exec -i "notebook.jupyter-$i.localhost" sh -c "cp -r /mnt/notebook/* /home/jovyan/work/local/ && chown -R ${JUPYTERLAB_UID}:${JUPYTERLAB_GID} /home/jovyan"
   done
   
   proxyStart "$INSTANCES"

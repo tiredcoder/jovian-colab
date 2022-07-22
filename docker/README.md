@@ -47,7 +47,9 @@ The following network sockets are used *within* the created virtual infrastructu
 
 | Component(s)                                                       | Endpoint |
 | ------------------------------------------------------------------ | -------- |
+| Web server used in the 'Test' notebook                             | TCP 4000 |
 | IPFS libp2p swarm                                                  | TCP 4001 |
+| IPFS libp2p relay daemon                                           | TCP 4002 |
 | IPFS Peer RPC API (daemon/rw access, including Prometheus metrics) | TCP 5001 |
 | IPFS Cluster HTTP REST API                                         | TCP 9094 |
 | IPFS Pinning Services API                                          | TCP 9097 |
@@ -73,9 +75,12 @@ The following network sockets are used on the Docker host machine (configured vi
    - Fabric CA: 127.0.0.1:7054
    - Fabric Gateway: 127.0.0.1:7051
    - IPFS bootstrap node: 127.0.0.1:4001
+   - IPFS relay: 127.0.0.1:4002
  - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
  - JupyterLab Notebook local instances Web UI (via reverse proxy): 127.0.0.1:8888
  - JupyterLab Notebook external instance Web UI: 127.0.0.2:8889
+ - JupyterLab Notebook external instance web server (used by the 'Test' notebook): 172.20.0.1:4000 (the 'Docker gateway' interface of the local JupyterLab Notebook's Docker host that tunnels to 127.0.0.2:4000 on the external JupyterLab Docker host)
+ - JupyterLab Notebook external IPFS node: 172.20.0.1:4001 (the 'Docker gateway' interface of the local JupyterLab Notebook's Docker host that tunnels to 127.0.0.2:4001 on the external JupyterLab Docker host)
 
 ## Possibly change UIDs and GIDs
 Several directories will be mounted into the containers. You can specify your user ID and group ID via the .env files. This allows for data sharing between the containers and the Docker host.
@@ -123,6 +128,7 @@ cd ../fabric
 ```
 
 ## Start 3 (server local) JupyterLab (and IPFS node client) instances
+Note that this will build/rebuild a JupyterLab Docker image each time you execute the command (as to guarantee we have our latest client modules installed).
 ```
 cd ../jupyter
 ./jupyter-docker.sh up 3
@@ -144,20 +150,26 @@ Now that we have a running infrastructure, we combine two Jupyter notebooks to s
 
 We require several prerequisites for these notebooks to work: Node.js and IJavascript have to be installed; the client modules have to be build and installed; and the notebooks and configuration file have to copied from our Git repository's *'src/jupyter/notebook'* directory into the containers. We have automated these steps by modifying the JupyterLab container image.
 
-Both notebooks are available in the *'/home/jovyan/work/local'* directory of each JupyterLab instance. Proceed with the Fabric notebook in the first JupyterLab instance to continue this demo. **NOTE:** Any changes to the notebooks will be *temporarily* preserved (i.e. we are mounting the host's *'./docker/jupyter/jupyter-data/notebook/<instance>* directory inside of the container, but we remove this directory when the demo is stopped).
+Both notebooks are available in the *'/home/jovyan/work/local'* directory of each JupyterLab instance. Proceed with the Fabric notebook in the first JupyterLab instance to continue this demo. **NOTE:** Any changes to the notebooks will be *temporarily* preserved (i.e. we are mounting the host's *'./docker/jupyter/jupyter-data/notebook/\<instance\>* directory inside of the container, but we remove this directory when the demo is stopped).
 
 ## Optional: Start an external JupyterLab (and an IPFS node client)
 The JupypterLab instances above run on the same server and have direct access to Fabric and IPFS (all containers are part of the same network). We can add another JupyterLab instance that's running on our local system and that connects to organization A.
 
-Set up an SSH tunnel (to access Fabric CA, Fabric Gatway, and the IPFS bootstrap node):
+Set up an SSH tunnel (to access Fabric CA, Fabric Gateway, the IPFS bootstrap node, and the IPFS relay):
 ```
-ssh <user>@<dockerhost> -L 172.17.0.1:7054:127.0.0.1:7054 172.17.0.1:7051:127.0.0.1:7051 172.17.0.1:4001:127.0.0.1:4001
+ssh <user>@<server> -L 172.17.0.1:7054:127.0.0.1:7054 172.17.0.1:7051:127.0.0.1:7051 172.17.0.1:4001:127.0.0.1:4001 172.17.0.1:4002:127.0.0.1:4002
 ```
 Note that this SSH tunnel connects to the IP address of the local Docker default bridge (172.17.0.1). This interface is accessible from *within* the containers.
 
 Now clone this Git repository to your local system and copy the crypto material to the *'docker/jupyter-external/jupyter-data/server-crypto-config'* directory (i.e. copy the server's *'docker/fabric/fabric-config/crypto-config'* directory to your local system's *'server-crypto-config'* directory).
 
-Launch JupyterLab and its local IPFS node and then proceed with the Fabric notebook. **NOTE:** The notebooks are available in the *'/home/jovyan/work/notebooks'* directory and any changes to the notebooks *will* be preserved (i.e. we are mounting the host's *'./src/jupyter/notebook'* directory inside of the container).
+Next, we need to configure access to the IPFS relay (since our local IPFS node does not have direct access to our private IPFS network). On the external dockerhost (i.e. where the Fabric and IPFS clusters are running), obtain the ID of the IPFS relay:
+```
+docker logs relay0.pnet0.orga.ipfs.localhost
+```
+Add the relay's ID in multiaddr format to the *'jupyter-external/jupyter-docker/.env'* file (e.g. the multiaddr of organization A's relay0 for pnet0 is "/dns4/relay0.pnet0.orga.ipfs.localhost/tcp/4002/p2p/\<ID\>"). See the .env file for examples.
+
+Now launch JupyterLab and its local IPFS node. Then proceed with the Fabric notebook. **NOTE:** The notebooks are available in the *'/home/jovyan/work/notebooks'* directory and any changes to the notebooks *will* be preserved (i.e. we are mounting the host's *'./src/jupyter/notebook'* directory inside of the container).
 ```
 cd jupyter-external
 ./jupyter-docker-ext.sh up
@@ -168,13 +180,24 @@ Note that we are using 127.0.0.2:8889 as to prevent a possible port and session 
 [http://127.0.0.2:8889](http://127.0.0.2:8889)
 
 ## Testing blockchain/channel access
-We utilize Fabric's [Access Control Lists (ACLs) and policies](https://hyperledger-fabric.readthedocs.io/en/release-2.4/access_control.html) to limit access from the client SDK to the blockchaiigncertsn/channel. Specifically, we don *not* allow non-admins to subscribe to block events, which allows for full read access to all data/blocks, and thereby bypass our chaincode (which implements its own ACLs). We can verify a user's access level as follows:
+We utilize Fabric's [Access Control Lists (ACLs) and policies](https://hyperledger-fabric.readthedocs.io/en/release-2.4/access_control.html) to limit access from the client SDK to the blockchain/channel. Specifically, we do *not* allow non-admins to subscribe to block events, which allows for full read access to all data/blocks, and thereby bypass our chaincode (which implements its own ACLs). We can verify a user's access level as follows:
 ```
-(From within the src directory.)
+(From within the 'src' directory.)
 cd ./fabric/acl-policy-test
 ./test.sh
 ```
-Note that this test application uses the legacy client API and not the newer gateway API. Consequently, we have to use the older wallet identity files (instead of the key-pair files directly). Also note that there is a difference between admin users. I.e. the Fabric CA admin is *not* the same as the MSP's admin identity, and we need the MSP's. E.g. the crypto material of organization A's admin identity can be found in the sub-directories 'keystore' and 'signcerts' of the *'./docker/fabric/fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users/orgadmin@orga.fabric.localhost/msp'* directory. A user's crypto material can be obtained via the enrollment process that is mentioned in Fabric's Jupyter notebook.
+Note that this test application uses the legacy client API and not the newer gateway API. Consequently, we have to use the older wallet identity files (instead of the key-pair files directly). Also note that there is a difference between admin users; i.e. the Fabric CA admin is *not* the same as the MSP's admin identity, and we need the MSP's. E.g. the crypto material of organization A's admin identity can be found in the sub-directories 'keystore' and 'signcerts' of the *'./docker/fabric/fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users/orgadmin@orga.fabric.localhost/msp'* directory. A user's crypto material can be obtained via the enrollment process that is mentioned in Fabric's Jupyter notebook.
+
+## Testing
+We can the this prototype's behavior by using the 'Test' notebook. This notebook will use a web server to remote control another JupyterLab instance. If we want to access this web server while it is running on an external JupyterLab client (i.e. our laptop), we have to (*reverse*) tunnel the traffic from our local JupyterLab instances (i.e. the server where the Fabric and IPFS clusters are running) to the external JupyterLab instance (note that the '172.20.0.1' IP address can change; use 'ip a|grep docker0' to find the address):
+```
+(from the external JupyterLab instance's Docker host)
+ssh <user>@<dockerhost> -R 127.0.0.2:4000:172.20.0.1:4000
+```
+```
+(or from the local JupyterLab instance's Docker host)
+ssh <user>@<externalhost> -L 172.20.0.1:4000:127.0.0.2:4000
+```
 
 ## Verify that Docker is running
 ```
@@ -193,6 +216,8 @@ docker exec peer0.pnet0.orga.ipfs.localhost ipfs --help
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs id
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs bootstrap list
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs swarm peers
+docker exec peer0.pnet0.orga.ipfs.localhost ipfs swarm connect /dns4/ipfs.jupyter-ext.localhost/tcp/4001/p2p/<PEERID>
+docker exec ipfs.jupyter-1.localhost ipfs swarm connect /dns4/relay0.pnet0.orga.ipfs.localhost/tcp/4002/p2p/<RELAYID>/p2p-circuit/p2p/<EXTERNAL_PEER_ID>
 ```
 **IPFS cluster CLI examples:**
 ```

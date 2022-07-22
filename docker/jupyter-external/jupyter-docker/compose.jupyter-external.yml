@@ -12,7 +12,7 @@ networks:
 
 services:
   ipfs.jupyter.localhost:
-    build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
+    build: # Own IPFS image with private network bootstrap, mDNS toggle, and RelayClient support
       context: ../../ipfs/ipfs-docker/peer-image/
       dockerfile: ipfs-peer.dockerfile
       args:
@@ -25,16 +25,19 @@ services:
     restart: unless-stopped # Allows restart via IPFS's HTTP RPC API
     volumes:
       - ../jupyter-data/ipfs:/data/ipfs # Shared IPFS repository
+    ports:
+      - "${IPFS_LIBP2P_SOCKET}:4001" # Allow access from remote IPFS node (SSH tunnel)
     networks:
       - demo
     environment:
       LIBP2P_FORCE_PNET: 1 # Force usage of private IPFS network (we use a dummy config that doesn't work but does start the IPFS process; we'll get the actual config via fabric)
       IPFS_SWARM_KEY: "/key/swarm/psk/1.0.0/\n/base16/\nffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" # Dummy private IPFS network key
       IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
-      IPFS_AUTORELAY: 'false' # Don't enable AutoRelay (experimental NAT traversal); we use an SSH tunnel
-    extra_hosts:
+      IPFS_CLIENT_RELAYS: "${IPFS_CLIENT_RELAYS}" # Semicolon-separated list of static relays
+    extra_hosts: # Provide access to remote services (SSH tunnel)
       - "host.docker.internal:host-gateway"
       - "peer0.pnet0.orga.ipfs.localhost:host-gateway"
+      - "relay0.pnet0.orga.ipfs.localhost:host-gateway"
   notebook.jupyter.localhost:
     build: # Own JupyterLab image with prerequisites installed
       context: ../../jupyter/jupyter-docker/jupyterlab-image/
@@ -49,6 +52,7 @@ services:
     init: false # Image is already using 'tini' by default
     ports:
       - "${JUPYTERLAB_HTTP_SOCKET}:8888" # Allow access to JupyterLab
+      - "${TESTNB_HTTP_SOCKET}:4000" # Allow access to the test notebook's web server (used for remote testing)
     volumes:
       - ../../../src/jupyter/notebook:/home/jovyan/work/notebook # Write access to notebooks
       - ../jupyter-data/ipfs:/mnt/ipfs # We need access to the local IPFS repository directory to configure the network (change the key file)
@@ -64,8 +68,9 @@ services:
       JUPYTER_ENABLE_LAB: 'yes'
       RESTARTABLE: 'yes'
       NOTEBOOK_ARGS: '--no-browser --ServerApp.ip=0.0.0.0 --ServerApp.port=8888 --ServerApp.token= --ServerApp.password= --ServerApp.allow_password_change=False'
-    extra_hosts:
+    extra_hosts: # Provide access to remote services (SSH tunnel)
       - "host.docker.internal:host-gateway"
       - "ca.orga.fabric.localhost:host-gateway"
       - "peer0.orga.fabric.localhost:host-gateway"
       - "peer0.pnet0.orga.ipfs.localhost:host-gateway"
+      - "relay0.pnet0.orga.ipfs.localhost:host-gateway"

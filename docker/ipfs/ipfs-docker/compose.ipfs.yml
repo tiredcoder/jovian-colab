@@ -15,7 +15,7 @@ networks:
 
 # IPFS peer service template
 x-ipfs-peer: &default-ipfs-peer
-  build: # Own IPFS image with private network bootstrap, mDNS toggle, and AutoRelay toggle support
+  build: # Own IPFS image with private network bootstrap, mDNS toggle, and RelayClient toggle support
     context: ./peer-image/
     dockerfile: ipfs-peer.dockerfile
     args:
@@ -50,6 +50,27 @@ x-ipfs-cluster: &default-ipfs-cluster
     CLUSTER_METRICS_PROMETHEUSENDPOINT: '/ip4/0.0.0.0/tcp/8888' # Set Prometheus endpoint to listen on all interfaces
 
 
+# IPFS libp2p relay service template (provides access to and from remote (SSH tunneled) IPFS nodes)
+x-ipfs-relay: &default-ipfs-relay
+  build: # Own libp2p-relay-daemon image with our patched libp2p-relay-daemon
+    context: ../../../src/ipfs/libp2p-relay-daemon/
+    dockerfile: ipfs-relay.dockerfile
+  image: "jc_demo_ipfs-relay"
+  init: false # Image is already using 'tini' by default
+  networks:
+    - demo
+  environment: &env-default-ipfs-relay
+    IPFS_SWARM_KEY: "${IPFS_PNET0_SWARM_KEY}"
+    IPFS_BOOTSTRAP_PEERS: "${IPFS_PNET0_BOOTSTRAP_PEERS}"
+  depends_on: # Wait for the bootstrap nodes
+    peer0.pnet0.orga.ipfs.localhost:
+      condition: service_healthy
+    peer0.pnet0.orgb.ipfs.localhost:
+      condition: service_healthy
+    peer0.pnet0.orgc.ipfs.localhost:
+      condition: service_healthy
+
+
 services:
   # Organization A
   # 1 private IPFS network (pnet0) - 1 cluster - 2 peers - 2 cluster sidecars
@@ -61,6 +82,9 @@ services:
       - ../ipfs-data/orga/pnet0/peer0:/data/ipfs
     ports:
       - "${IPFS_ORGA_PNET0_PEER0_LIBP2P_SOCKET}:4001" # Allow access from remote JupyterLab (SSH tunnel)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "ipfs.jupyter-ext.localhost:host-gateway" # Provide access to remote IPFS node (SSH tunnel)
   cluster0.pnet0.orga.ipfs.localhost:
     <<: *default-ipfs-cluster
     container_name: cluster0.pnet0.orga.ipfs.localhost
@@ -101,6 +125,15 @@ services:
       - ../crypto-config/orga/pnet0/cluster1:/data/crypto-config:ro
     networks:
       - demo
+  relay0.pnet0.orga.ipfs.localhost:
+    <<: *default-ipfs-relay
+    container_name: relay0.pnet0.orga.ipfs.localhost
+    hostname: relay0.pnet0.orga.ipfs.localhost
+    ports:
+      - "${IPFS_ORGA_PNET0_RELAY0_LIBP2P_SOCKET}:4002" # Allow access from remote IPFS node (SSH tunnel)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "ipfs.jupyter-ext.localhost:host-gateway" # Provide access to remote IPFS node (SSH tunnel)
 
   # Organization B
   # 2 private IPFS networks (pnet0 & pnet1) - 2 cluster (1 cluster per private network) - 2 peers per cluster - 2 cluster sidecars per cluster

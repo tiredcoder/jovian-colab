@@ -1,0 +1,8 @@
+Dockerfile
+docker-compose.yml
+ipfs-relay.dockerfile
+.env
+.git
+.gitignore
+.DS_Store
+.cache
