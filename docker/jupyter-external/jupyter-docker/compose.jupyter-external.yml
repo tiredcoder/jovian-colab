@@ -33,6 +33,7 @@ services:
       LIBP2P_FORCE_PNET: 1 # Force usage of private IPFS network (we use a dummy config that doesn't work but does start the IPFS process; we'll get the actual config via fabric)
       IPFS_SWARM_KEY: "/key/swarm/psk/1.0.0/\n/base16/\nffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" # Dummy private IPFS network key
       IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
+      IPFS_ANNOUNCE_HOST: 'true' # Announce only via FQDN (and relay)
       IPFS_CLIENT_RELAYS: "${IPFS_CLIENT_RELAYS}" # Semicolon-separated list of static relays
     extra_hosts: # Provide access to remote services (SSH tunnel)
       - "host.docker.internal:host-gateway"
@@ -72,5 +73,3 @@ services:
       - "host.docker.internal:host-gateway"
       - "ca.orga.fabric.localhost:host-gateway"
       - "peer0.orga.fabric.localhost:host-gateway"
-      - "peer0.pnet0.orga.ipfs.localhost:host-gateway"
-      - "relay0.pnet0.orga.ipfs.localhost:host-gateway"

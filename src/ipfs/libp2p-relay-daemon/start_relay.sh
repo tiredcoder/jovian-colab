@@ -4,10 +4,18 @@
 #  - https://github.com/ipfs/go-ipfs/blob/v0.12.2/bin/container_daemon
 #  - https://github.com/libp2p/go-libp2p-relay-daemon/blob/bb55da132ad49ce8d2cee881ca05f40b04a2bb7d/etc/libp2p-relay-daemon.sh
 set -e
+CONFIG_FILE='/usr/local/etc/libp2p-relay-daemon/config.json'
 
 
-# File descriptor limit for TCP connections
-ulimit -n 65536
+# Announce FQDN instead of IPs
+if [ ! -z "$IPFS_ANNOUNCE_HOST" ]; then
+  if [ "$IPFS_ANNOUNCE_HOST" = "true" ] || [ "$IPFS_ANNOUNCE_HOST" = "1" ] || [ "$IPFS_ANNOUNCE_HOST" = "yes" ]; then
+    echo "Only announcing FQDN (DNS4) on TCP 4002..."
+    jq ".Network.AnnounceAddrs = [\"/dns4/$(hostname -f)/tcp/4002\"]" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+    mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+  fi
+fi
+unset IPFS_ANNOUNCE_HOST
 
 
 # Private network swarm key
@@ -36,7 +44,6 @@ unset IPFS_SWARM_KEY_FILE
 
 # Bootstrap peers
 if [ ! -z "$IPFS_BOOTSTRAP_PEERS" ]; then
-  CONFIG_FILE='/usr/local/etc/libp2p-relay-daemon/config.json'
   echo "Adding bootstrap peers from env variable to ${CONFIG_FILE}..."
   OUT=''
   for PEER in $(echo "$IPFS_BOOTSTRAP_PEERS" | tr ';' '\n'); do

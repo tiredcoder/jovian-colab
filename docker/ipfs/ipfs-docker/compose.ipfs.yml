@@ -30,6 +30,7 @@ x-ipfs-peer: &default-ipfs-peer
     IPFS_SWARM_KEY: "${IPFS_PNET0_SWARM_KEY}" # Private IPFS network key
     IPFS_PNET_BOOTSTRAP_PEERS: "${IPFS_PNET0_BOOTSTRAP_PEERS}" # Semicolon-separated list of bootstrap nodes for private IPFS networks (peer0 of each pnet)
     IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
+    IPFS_ANNOUNCE_HOST: 'true' # Announce only via FQDN
 
 
 # IPFS cluster service template
@@ -62,6 +63,7 @@ x-ipfs-relay: &default-ipfs-relay
   environment: &env-default-ipfs-relay
     IPFS_SWARM_KEY: "${IPFS_PNET0_SWARM_KEY}"
     IPFS_BOOTSTRAP_PEERS: "${IPFS_PNET0_BOOTSTRAP_PEERS}"
+    IPFS_ANNOUNCE_HOST: 'true'
   depends_on: # Wait for the bootstrap nodes
     peer0.pnet0.orga.ipfs.localhost:
       condition: service_healthy

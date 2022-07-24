@@ -58,6 +58,15 @@ else
 
 fi
 
+# Announce FQDN instead of IPs
+if [ ! -z "$IPFS_ANNOUNCE_HOST" ]; then
+  if [ "$IPFS_ANNOUNCE_HOST" = "true" ] || [ "$IPFS_ANNOUNCE_HOST" = "1" ] || [ "$IPFS_ANNOUNCE_HOST" = "yes" ]; then
+    echo "Only announcing FQDN (DNS4) on TCP 4001..."
+    ipfs config --json Addresses.Announce "[\"/dns4/$(hostname -f)/tcp/4001\"]"
+  fi
+fi
+unset IPFS_ANNOUNCE_HOST
+
 # Toggle multicast DNS peer discovery (default is true)
 # https://github.com/ipfs/ipfs-docs/blob/6a961afbe4c5978e6c5cbdb7d0b27502953b79d5/docs/how-to/configure-node.md#discovery
 if [ ! -z "$IPFS_MDNS" ]; then
@@ -66,22 +75,29 @@ if [ ! -z "$IPFS_MDNS" ]; then
     ipfs config --bool Discovery.MDNS.Enabled 0
   fi
 fi
+unset IPFS_MDNS
 
 # Enable the relay client using static relays (default is false)
 # https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayclient
+# https://github.com/ipfs/kubo/blob/v0.12.2/test/sharness/t0182-circuit-relay.sh
 if [ ! -z "$IPFS_CLIENT_RELAYS" ]; then
-  echo "Enabling relay client..."
-  ipfs config --bool Swarm.RelayClient.Enabled 1
   echo 'Forcing reachability as private (simulate NAT)...'
   ipfs config Internal.Libp2pForceReachability private
+  echo "Enabling relay client..."
+  ipfs config --json Swarm.RelayClient.Enabled true
   echo "Adding static relays..."
   RELAYS='['
+  ANNOUNCE='['
   for RELAY in $(echo "$IPFS_CLIENT_RELAYS" | tr ';' '\n'); do
     RELAYS="${RELAYS}\"${RELAY}\","
+    ANNOUNCE="${ANNOUNCE}\"${RELAY}/p2p-circuit\","
   done
   RELAYS="${RELAYS%?}]"
+  ANNOUNCE="${ANNOUNCE%?}]"
   ipfs config --json Swarm.RelayClient.StaticRelays "$RELAYS"
+  ipfs config --json Addresses.AppendAnnounce "$ANNOUNCE"
 fi
+unset IPFS_CLIENT_RELAYS
 
 # Bootstrap Private Network
 # https://github.com/ipfs/ipfs-docs/blob/d0462921172e425572ad1c0a9189a409bbe3c363/docs/how-to/modify-bootstrap-list.md
@@ -105,5 +121,6 @@ if [ ! -z "$IPFS_PNET_BOOTSTRAP_PEERS" ]; then
     done
   fi
 fi
+unset IPFS_PNET_BOOTSTRAP_PEERS
 
 exec ipfs "$@"
