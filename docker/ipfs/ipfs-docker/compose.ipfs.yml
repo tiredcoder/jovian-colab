@@ -15,7 +15,7 @@ networks:
 
 # IPFS peer service template
 x-ipfs-peer: &default-ipfs-peer
-  build: # Own IPFS image with private network bootstrap, mDNS toggle, and RelayClient toggle support
+  build: # Own IPFS image with private network bootstrap, hostname announce support, mDNS toggle, and RelayClient toggle support
     context: ./peer-image/
     dockerfile: ipfs-peer.dockerfile
     args:

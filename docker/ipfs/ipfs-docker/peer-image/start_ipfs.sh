@@ -1,6 +1,7 @@
 #!/bin/sh
 # ! MODIFIED BY RIK JANSSEN: !
 #   - Added private network support
+#   - Added hostname announce support
 #   - Added mDNS toggle support
 #   - Added RelayClient support
 # Upstream: https://github.com/ipfs/go-ipfs/blob/v0.12.2/bin/container_daemon
@@ -58,14 +59,19 @@ else
 
 fi
 
+
 # Announce FQDN instead of IPs
 if [ ! -z "$IPFS_ANNOUNCE_HOST" ]; then
   if [ "$IPFS_ANNOUNCE_HOST" = "true" ] || [ "$IPFS_ANNOUNCE_HOST" = "1" ] || [ "$IPFS_ANNOUNCE_HOST" = "yes" ]; then
     echo "Only announcing FQDN (DNS4) on TCP 4001..."
     ipfs config --json Addresses.Announce "[\"/dns4/$(hostname -f)/tcp/4001\"]"
+  else
+    echo "Announcing given hostname '$IPFS_ANNOUNCE_HOST' and FQDN (DNS4) on TCP 4001..."
+    ipfs config --json Addresses.Announce "[\"/dns4/$(hostname -f)/tcp/4001\",\"/dns4/${IPFS_ANNOUNCE_HOST}/tcp/4001\"]"
   fi
 fi
 unset IPFS_ANNOUNCE_HOST
+
 
 # Toggle multicast DNS peer discovery (default is true)
 # https://github.com/ipfs/ipfs-docs/blob/6a961afbe4c5978e6c5cbdb7d0b27502953b79d5/docs/how-to/configure-node.md#discovery
@@ -76,6 +82,7 @@ if [ ! -z "$IPFS_MDNS" ]; then
   fi
 fi
 unset IPFS_MDNS
+
 
 # Enable the relay client using static relays (default is false)
 # https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayclient
@@ -98,6 +105,7 @@ if [ ! -z "$IPFS_CLIENT_RELAYS" ]; then
   ipfs config --json Addresses.AppendAnnounce "$ANNOUNCE"
 fi
 unset IPFS_CLIENT_RELAYS
+
 
 # Bootstrap Private Network
 # https://github.com/ipfs/ipfs-docs/blob/d0462921172e425572ad1c0a9189a409bbe3c363/docs/how-to/modify-bootstrap-list.md
@@ -123,4 +131,6 @@ if [ ! -z "$IPFS_PNET_BOOTSTRAP_PEERS" ]; then
 fi
 unset IPFS_PNET_BOOTSTRAP_PEERS
 
+
+# Start IPFS node
 exec ipfs "$@"

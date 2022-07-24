@@ -14,7 +14,7 @@ networks:
 
 services:
   ipfs.jupyter.localhost:
-    build: # Own IPFS image with private network bootstrap, mDNS toggle, and RelayClient support
+    build: # Own IPFS image with private network bootstrap, hostname announce support, mDNS toggle, and RelayClient support
       context: ../../ipfs/ipfs-docker/peer-image/
       dockerfile: ipfs-peer.dockerfile
       args:

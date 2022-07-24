@@ -1,4 +1,4 @@
-# IPFS Peer Container Image With Private Network Bootstrapping, mDNS toggle, and RelayClient support
+# IPFS Peer Container Image With Private Network Bootstrapping, hostname announce support, mDNS toggle, and RelayClient support
 
 # Default image
 ARG IPFS_VERSION="v0.12.2"
