@@ -107,7 +107,7 @@ def decrypt(responseObj, outfile, base64Key, chunkSize, cipherMode='ChaCha20'):
           for chunk in responseObj.iter_content(chunk_size = chunkSize):
             # The nonce is linked to chunk size, but the HTTP response chunks might differ (e.g. nonce is incremented for a chunk size of 10MiB, but we get HTTP responses of 4KiB)
             # We use an in-memory buffer to match the chunk size (i.e. buffer the HTTP responses until we reach the desired chunk size)
-            if buffer.tell() + len(chunk) > chunkSize:
+            if buffer.tell() + len(chunk) > chunkSize: # Check if we need to empty the filled buffer
               bufferFree = chunkSize - buffer.tell()
               buffer.write(chunk[0:bufferFree])
               decrypt_chacha_salsa()
@@ -116,7 +116,7 @@ def decrypt(responseObj, outfile, base64Key, chunkSize, cipherMode='ChaCha20'):
               buffer.write(chunk[bufferFree:])
             else:
               buffer.write(chunk)
-          decrypt_chacha_salsa()
+          decrypt_chacha_salsa() # Process last remaining data in buffer (i.e. buffer might not be filled, but we are at the end of the file)
 
       if cipherMode == 'AES_256_CTR':
         ivSpec = b'\x00' * 16 # Counter only; see encrypt notes

@@ -85,14 +85,16 @@ unset IPFS_MDNS
 
 
 # Enable the relay client using static relays (default is false)
+# The node will announce itself via the relay *and* via its default announcements
+# This allows direct neighbors to connect without using the relay (as is the normal case in private reachability mode)
 # https://github.com/ipfs/go-ipfs/blob/v0.12.2/docs/config.md#swarmrelayclient
 # https://github.com/ipfs/kubo/blob/v0.12.2/test/sharness/t0182-circuit-relay.sh
 if [ ! -z "$IPFS_CLIENT_RELAYS" ]; then
-  echo 'Forcing reachability as private (simulate NAT)...'
-  ipfs config Internal.Libp2pForceReachability private
+  echo 'Forcing reachability as *public* (private only allows traffic via relay, even when we have a direct neighbor node)...'
+  ipfs config Internal.Libp2pForceReachability public
   echo "Enabling relay client..."
   ipfs config --json Swarm.RelayClient.Enabled true
-  echo "Adding static relays..."
+  echo "Adding static relay(s)..."
   RELAYS='['
   ANNOUNCE='['
   for RELAY in $(echo "$IPFS_CLIENT_RELAYS" | tr ';' '\n'); do
@@ -102,6 +104,7 @@ if [ ! -z "$IPFS_CLIENT_RELAYS" ]; then
   RELAYS="${RELAYS%?}]"
   ANNOUNCE="${ANNOUNCE%?}]"
   ipfs config --json Swarm.RelayClient.StaticRelays "$RELAYS"
+  echo 'Also announcing peer via relay(s) (account for NAT / firewalled network(s))...'
   ipfs config --json Addresses.AppendAnnounce "$ANNOUNCE"
 fi
 unset IPFS_CLIENT_RELAYS

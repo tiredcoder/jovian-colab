@@ -6,14 +6,16 @@ Please see the '.env' file(s) for the configuration (e.g. which software version
 
 **SECURITY WARNING:** Do not expose this infrastructure directly to the Internet!
 
-## Overview
-![Infrastructure overview](infra.svg)
+## High-level infrastructure overview
+![High-level infrastructure overview](infra-high-level.svg)
 
 The infrastructure consists of three organizations ('A', 'B', and 'C'), two Hyperledger Fabric blockchains/channels (one for the consortium and one for organization B), and two private IPFS networks (again, one for the consortium and one for organization B). The same chaincode/smart contract ('cc-ipfs') is deployed on both channels. The client application(s) consists of a JupyterLab Notebook and an IPFS peer.
 
 ## Requirements
-The infrastructure consists of about 50 Docker containers.
- - Hardware: Tested on an x86_64 QEMU/KVM VM with a: 65 GiB virtual disk (SSD backend), 10 GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
+The infrastructure consists of about 50 Docker containers. See further down below for a visual overview.
+ - Hardware: Tested on two x86_64 QEMU/KVM VMs:
+   - VM A: 85 GiB qcow2 virtual disk formatted as ext4 (SSD backend), 10 GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
+   - VM B: 45 GiB qcow2 virtual disk formatted as ext4 (SSD backend), 4 GiB RAM, 4 core CPU (Intel Xeon E3 1240L v5 backend).
  - Software: See tables below.
 
 ## Versions
@@ -43,7 +45,7 @@ The infrastructure consists of the software mentioned in the table below. We use
 As per the [documentation](https://github.com/hyperledger/fabric/blob/8a4c7f3bdb17c18fe6c56ff7e3e2fc008e223005/docs/source/sdk_chaincode.md#fabric-contract-apis-and-application-apis), we use the client SDK (legacy) for CA administrative actions and the Gateway SDK as the actual client (i.e. JupyterLab).
 
 ## Internal Endpoints Overview
-The following network sockets are used *within* the created virtual infrastructure (by the relevant containers). These endpoints are *not* reachable from the Docker host / outside.
+The following network sockets are used *within* the created virtual infrastructure (by the relevant containers). These endpoints are *not* reachable from the Docker host / outside world.
 
 | Component(s)                                                       | Endpoint |
 | ------------------------------------------------------------------ | -------- |
@@ -69,7 +71,7 @@ The following network sockets are used *within* the created virtual infrastructu
 | External/Second JupyterLab Notebook Web UI                         | TCP 8889 |
 
 ## Docker Host Network Bindings
-The following network sockets are used on the Docker host machine (configured via the .env files). We use these network bindings to selectively expose the container endpoints (see above) to the Docker host machine.
+The following network sockets are used on the Docker host machine (configured via the .env files). We use these network bindings to selectively expose the container endpoints (see above) to the Docker host machine. See below for a visual overview.
  - IPFS peer APIs (IPFS Web UI access): 127.0.0.1:5000 - 127.0.0.1:5003
  - Organization A's endpoints to provide access to an external JupyterLab instance (via an SSH tunnel):
    - Fabric CA: 127.0.0.1:7054
@@ -79,8 +81,13 @@ The following network sockets are used on the Docker host machine (configured vi
  - Monitoring tools Web UIs: 127.0.0.1:7000 - 127.0.0.1:7004
  - JupyterLab Notebook local instances Web UI (via reverse proxy): 127.0.0.1:8888
  - JupyterLab Notebook external instance Web UI: 127.0.0.2:8889
- - JupyterLab Notebook external instance web server (used by the 'Test' notebook): 172.20.0.1:4000 (the 'Docker gateway' interface of the local JupyterLab Notebook's Docker host that tunnels to 127.0.0.2:4000 on the external JupyterLab Docker host)
- - JupyterLab Notebook external IPFS node: 172.20.0.1:4001 (the 'Docker gateway' interface of the local JupyterLab Notebook's Docker host that tunnels to 127.0.0.2:4001 on the external JupyterLab Docker host)
+ - JupyterLab Notebook external instance web server (used by the 'Test' notebook): 172.20.0.1:4000 (the 'docker0' interface of the local JupyterLab Notebook's Docker host that tunnels to 127.0.0.2:4000 on the external JupyterLab Docker host)
+ - JupyterLab Notebook external IPFS node: 172.20.0.1:4001 (the 'docker0' interface of the local JupyterLab Notebook's Docker host that tunnels to 127.0.0.2:4001 on the external JupyterLab Docker host)
+
+## Physical infrastructure overview
+![Physical infrastructure overview](infra-physical.svg)
+
+The majority of the infrastructure shares the same virtual (private IPv4) network *'jovian-colab_demo-net'*. No advanced firewalling is configured (all containers have full access to each other). The external JupyterLab instance on VM B is connected to organization A's infrastructure via an SSH tunnel (no advanced clustering, i.e. Docker's 'Swarm Mode', is being used, instead we have combined several Docker Compose projects). The link speeds have been determined via iperf3.
 
 ## Possibly change UIDs and GIDs
 Several directories will be mounted into the containers. You can specify your user ID and group ID via the .env files. This allows for data sharing between the containers and the Docker host.
@@ -189,7 +196,7 @@ cd ./fabric/acl-policy-test
 Note that this test application uses the legacy client API and not the newer gateway API. Consequently, we have to use the older wallet identity files (instead of the key-pair files directly). Also note that there is a difference between admin users; i.e. the Fabric CA admin is *not* the same as the MSP's admin identity, and we need the MSP's. E.g. the crypto material of organization A's admin identity can be found in the sub-directories 'keystore' and 'signcerts' of the *'./docker/fabric/fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users/orgadmin@orga.fabric.localhost/msp'* directory. A user's crypto material can be obtained via the enrollment process that is mentioned in Fabric's Jupyter notebook.
 
 ## Testing
-We can the this prototype's behavior by using the 'Test' notebook. This notebook will use a web server to remote control another JupyterLab instance. If we want to access this web server while it is running on an external JupyterLab client (i.e. our laptop), we have to (*reverse*) tunnel the traffic from our local JupyterLab instances (i.e. the server where the Fabric and IPFS clusters are running) to the external JupyterLab instance (note that the '172.20.0.1' IP address can change; use 'ip a|grep docker0' to find the address):
+We can the this prototype's behavior by using the 'Test' notebook. This notebook will use a web server to remote control another JupyterLab instance. If we want to access this web server while it is running on an external JupyterLab client (e.g. VM B), we have to (*reverse*) tunnel the traffic from our local JupyterLab instances (i.e. the server where the Fabric and IPFS clusters are running) to the external JupyterLab instance (note that the '172.20.0.1' IP address can change; use 'ip a|grep docker0' to find the address):
 ```
 (from the external JupyterLab instance's Docker host)
 ssh <user>@<dockerhost> -R 127.0.0.2:4000:172.20.0.1:4000
@@ -216,8 +223,7 @@ docker exec peer0.pnet0.orga.ipfs.localhost ipfs --help
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs id
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs bootstrap list
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs swarm peers
-docker exec peer0.pnet0.orga.ipfs.localhost ipfs swarm connect /dns4/ipfs.jupyter-ext.localhost/tcp/4001/p2p/<PEERID>
-docker exec ipfs.jupyter-1.localhost ipfs swarm connect /dns4/relay0.pnet0.orga.ipfs.localhost/tcp/4002/p2p/<RELAYID>/p2p-circuit/p2p/<EXTERNAL_PEER_ID>
+docker exec peer0.pnet0.orga.ipfs.localhost ipfs ping /p2p/<PEERID>
 ```
 **IPFS cluster CLI examples:**
 ```

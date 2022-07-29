@@ -13,6 +13,10 @@ if [ ! -z "$IPFS_ANNOUNCE_HOST" ]; then
     echo "Only announcing FQDN (DNS4) on TCP 4002..."
     jq ".Network.AnnounceAddrs = [\"/dns4/$(hostname -f)/tcp/4002\"]" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
     mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+  else
+    echo "Announcing given hostname '$IPFS_ANNOUNCE_HOST' and FQDN (DNS4) on TCP 4002..."
+    jq ".Network.AnnounceAddrs = [\"/dns4/$(hostname -f)/tcp/4002\",\"/dns4/${IPFS_ANNOUNCE_HOST}/tcp/4002\"]" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+    mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
   fi
 fi
 unset IPFS_ANNOUNCE_HOST
