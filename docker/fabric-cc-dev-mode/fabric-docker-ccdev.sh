@@ -110,12 +110,12 @@ case "$ACTION" in
     chaincodeStart
     ;;
   "invoke")
-    CC_INVOKE_DEFAULT_ARGS='{"Args":["createNetwork","pnet0","boot1;boot2","/key/swarm/psk/1.0.0/\n/base16/\test","{\"pin\":\"test\"}","{\"Users\":{},\"MSPs\":{\"SampleOrg\":\"r\"}}"]}'
-    #CC_INVOKE_DEFAULT_ARGS='{"Args":["createData","filetest", "net", "cid", "cipher", "cryptkey", "chunksize", "{\"Users\":{},\"MSPs\":{\"SampleOrg\":\"r\"}}"]}'
+    CC_INVOKE_DEFAULT_ARGS='{"Args":["createNetwork","pnet0","boot1;boot2","/key/swarm/psk/1.0.0/\n/base16/\test","{\"pin\":\"test\"}","relay0;relay1","{\"Users\":{},\"MSPs\":{\"SampleOrg\":\"r\"}}"]}'
+    #CC_INVOKE_DEFAULT_ARGS='{"Args":["createData","filetest", "net", "cid", "cipher", "cryptkey", "{\"Users\":{},\"MSPs\":{\"SampleOrg\":\"r\"}}"]}'
     #CC_INVOKE_DEFAULT_ARGS='{"Args":["readData", "peer0.fabric-ccdev.localhost@SampleOrg/0/filetest"]}'
     #CC_INVOKE_DEFAULT_ARGS='{"Args":["listAllData"]}'
     #CC_INVOKE_DEFAULT_ARGS='{"Args":["deleteData", "peer0.fabric-ccdev.localhost@SampleOrg/0/filetest"]}'
-    #CC_INVOKE_DEFAULT_ARGS='{"Args":["createData","filetest", "net", "CHANGED CID", "cipher", "cryptkey", "chunksize", "{\"Users\":{},\"MSPs\":{\"SampleOrg\":\"r\"}}"]}'
+    #CC_INVOKE_DEFAULT_ARGS='{"Args":["createData","filetest", "net", "CHANGED CID", "cipher", "cryptkey", "{\"Users\":{},\"MSPs\":{\"SampleOrg\":\"r\"}}"]}'
     #CC_INVOKE_DEFAULT_ARGS='{"Args":["listDataHistory","peer0.fabric-ccdev.localhost@SampleOrg/0/filetest"]}'
     CC_INVOKE_ARGS="${2:-$CC_INVOKE_DEFAULT_ARGS}"
     CHAINCODE_DIR="$(readlink -f ${3:-$SCRIPT_DIR/../../src/fabric/chaincode/cc-ipfs})"

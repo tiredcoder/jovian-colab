@@ -196,9 +196,9 @@ const closeConnection = async (gateway: Gateway, gRpcClient: grpc.Client): Promi
 
 
 // IPFS Chaincode funtions
-const createNetwork = async (contract: Contract, id: string, bootstrapNodes: string, netKey: string, pinningSvcs: string, acl: string): Promise<string> => {
+const createNetwork = async (contract: Contract, id: string, bootstrapNodes: string, netKey: string, pinningSvcs: string, relays: string, acl: string): Promise<string> => {
   try {
-    const responseBytes = await contract.submitTransaction('createNetwork', id, bootstrapNodes, netKey, pinningSvcs, acl);
+    const responseBytes = await contract.submitTransaction('createNetwork', id, bootstrapNodes, netKey, pinningSvcs, relays, acl);
     const utf8Decoder = new TextDecoder();
     const responseJson: string = utf8Decoder.decode(responseBytes);
     return responseJson;
@@ -240,9 +240,9 @@ const deleteNetwork = async (contract: Contract, key: string): Promise<string> =
   }
 }
 
-const createData = async (contract: Contract, id: string, networkId: string, cid: string, cryptCipher: string, cryptKey: string, chunkSize: string, acl: string): Promise<string> => {
+const createData = async (contract: Contract, id: string, networkId: string, cid: string, cryptCipher: string, cryptKey: string, acl: string): Promise<string> => {
   try {
-    const responseBytes = await contract.submitTransaction('createData', id, networkId, cid, cryptCipher, cryptKey, chunkSize, acl);
+    const responseBytes = await contract.submitTransaction('createData', id, networkId, cid, cryptCipher, cryptKey, acl);
     const utf8Decoder = new TextDecoder();
     const responseJson: string = utf8Decoder.decode(responseBytes);
     return responseJson;

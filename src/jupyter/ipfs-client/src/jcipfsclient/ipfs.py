@@ -78,6 +78,26 @@ def joinNetwork(nodeApiUrl, nodeRepoPath, swarmKey, bootstrapNodes):
     print("Error while joining IPFS network: " + str(e), file=sys.stderr)
 
 
+def configRelay(nodeApiUrl, relays):
+  try:
+    # Forcing reachability as public (private only allows traffic via relay, even when we have a direct neighbor node)
+    IpfsHttpRpcRequestHandler(nodeApiUrl + '/api/v0/config?arg=Internal.Libp2pForceReachability&arg=public')
+
+    # Enable client and add relays
+    IpfsHttpRpcRequestHandler(nodeApiUrl + '/api/v0/config?arg=Swarm.RelayClient.Enabled&arg=true&bool=true')
+    IpfsHttpRpcRequestHandler(nodeApiUrl + "/api/v0/config?arg=Swarm.RelayClient.StaticRelays&arg={relays}&json=true".format(relays = json.dumps(relays)))
+    
+    # Also announce peer via relay(s) (account for NAT / firewalled network(s))
+    for i in range(len(relays)):
+      relays[i] = "{relay}".format(relay = str(relays[i]) + '/p2p-circuit')
+    IpfsHttpRpcRequestHandler(nodeApiUrl + "/api/v0/config?arg=Addresses.AppendAnnounce&arg={relays}&json=true".format(relays = json.dumps(relays)))
+
+    # Restart the node (restarting is done out of bounds)
+    IpfsHttpRpcRequestHandler(nodeApiUrl + '/api/v0/shutdown', False)
+  except Exception as e:
+    print("Error while configuring relay: " + str(e), file=sys.stderr) 
+
+
 def getPeers(nodeApiUrl):
   try:
     data = IpfsHttpRpcRequestHandler(nodeApiUrl + '/api/v0/swarm/peers')
@@ -191,7 +211,7 @@ def addFile(nodeApiUrl, file, base64Key=None, chunkSize=1024*1024*10, cipherMode
         response_json = json.loads(response_json_ascii)
 
         cid = response_json['Hash']
-        return {'cid': cid, 'base64Key': base64Key, 'chunkSize': chunkSize, 'cipherMode': cipherMode}
+        return {'cid': cid, 'base64Key': base64Key, 'cipherMode': cipherMode}
   except Exception as e:
     print("Error while adding file: " + str(e), file=sys.stderr)
 

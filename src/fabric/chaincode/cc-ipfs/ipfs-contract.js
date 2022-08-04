@@ -73,7 +73,7 @@ class IPFSContract extends Contract {
    */
 
   // Add an IPFS network description
-  async createNetwork(ctx, id, bootstrapNodes, netKey, pinningSvcs, acl) {
+  async createNetwork(ctx, id, bootstrapNodes, netKey, pinningSvcs, relays, acl) {
     // Only admins can add IPFS network descriptions
     if (!this.clientCert.subject.includes('OU=admin')) {
       throw new Error(`Only admins can add IPFS network descriptions. You are: '${this.clientCertCN}@${this.clientMSPId}'.`);
@@ -97,6 +97,7 @@ class IPFSContract extends Contract {
       BootstrapNodes: bootstrapNodes,
       NetKey: netKey,
       ClusterPinningService: JSON.parse(pinningSvcs),
+      Relays: relays,
       ACL: JSON.parse(acl)
     };
 
@@ -184,7 +185,7 @@ class IPFSContract extends Contract {
    */
 
   // Add a data description
-  async createData(ctx, id, networkId, cid, cryptCipher, cryptKey, chunkSize, acl) {
+  async createData(ctx, id, networkId, cid, cryptCipher, cryptKey, acl) {
     // Set key to <user>@<MSP>/0/<data>
     const key = this.clientCertCN + '@' + this.clientMSPId + '/0/' + id;
 
@@ -204,7 +205,6 @@ class IPFSContract extends Contract {
       CID: cid,
       CryptCipher: cryptCipher,
       CryptKey: cryptKey,
-      ChunkSize: chunkSize,
       ACL: JSON.parse(acl)
     };
 
