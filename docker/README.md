@@ -89,7 +89,11 @@ The following network sockets are used on the Docker host machine (configured vi
 
 The majority of the infrastructure shares the same virtual (private IPv4) network *'jovian-colab_demo-net'*. No advanced firewalling is configured (all containers have full access to each other). The external JupyterLab instance on VM B is connected to organization A's infrastructure via an SSH tunnel (no advanced clustering, i.e. Docker's 'Swarm Mode', is being used, instead we have combined several Docker Compose projects). The link speeds have been determined via iperf3.
 
-## Optional: change the secrets in the .env file
+## Steps
+
+**NOTICE:** Please follow the steps below in the correct order (we use multiple Docker Compose files which create containers in the same network).
+
+### Optional: change the secrets in the .env file
 **Generate IPFS cluster secret(s):**
 ```
 echo "$(od -vN 32 -An -tx1 /dev/urandom | tr -d ' \n')"
@@ -101,15 +105,14 @@ echo "$(ipfs-swarm-key-gen)"
 ```
 Replace the newlines with '\n' (see the .env file for examples).
 
-**NOTICE:** Please follow the steps below in the correct order (we use multiple Docker Compose files which create containers in the same network).
 
-## Create Docker network
+### Create Docker network
 We manually create a Docker network that is used by the entire infrastructure (note that the network's name is referred to in each .env file used by Docker Compose).
 ```
 docker network create jovian-colab_demo-net
 ```
 
-## Boostrap IPFS
+### Boostrap IPFS
 We need to provide bootstrap nodes for each private IPFS network.
 1. Launch the IPFS bootstrap nodes and note their peer ID:
 ```
@@ -119,44 +122,44 @@ cd ./ipfs
 
 2. Add the bootstrap peer IDs in multiaddr format to the .env file (e.g. the multiaddr of organization A's peer0 for pnet0 is "/dns4/peer0.pnet0.orga.ipfs.localhost/tcp/4001/p2p/\<PEERID\>"). See the .env file for examples.
 
-## Start IPFS
+### Start IPFS
 (Make sure you bootstrapped IPFS first.)
 ```
 ./ipfs-docker.sh up
 ```
 
-## Start Fabric
+### Start Fabric
 ```
 cd ../fabric
 ./fabric-docker.sh up
 ```
 
-## Start 3 (server local) JupyterLab (and IPFS node client) instances
+### Start 3 (server local) JupyterLab (and IPFS node client) instances
 Note that this will build/rebuild a JupyterLab Docker image each time you execute the command (as to guarantee we have our latest client modules installed).
 ```
 cd ../jupyter
 ./jupyter-docker.sh up 3
 ```
 
-## Access JupyterLab from your web browser
+### Access JupyterLab from your web browser
 All instances are available via a reverse proxy:
  - [http://127.0.0.1:8888/notebook.jupyter-1.localhost](http://127.0.0.1:8888/notebook.jupyter-1.localhost)  
  - [http://127.0.0.1:8888/notebook.jupyter-2.localhost](http://127.0.0.1:8888/notebook.jupyter-2.localhost)  
  - [http://127.0.0.1:8888/notebook.jupyter-3.localhost](http://127.0.0.1:8888/notebook.jupyter-3.localhost)  
 
-### Optional: access the JupyterLab instances via remote using an SSH tunnel (i.e. if you are not running Docker on your local system)
+#### Optional: access the JupyterLab instances via remote using an SSH tunnel (i.e. if you are not running Docker on your local system)
 ```
 ssh <user>@<dockerhost> -L 127.0.0.1:8888:127.0.0.1:8888
 ```
 
-## Access Fabric and IPFS via JupyterLab
+### Access Fabric and IPFS via JupyterLab
 Now that we have a running infrastructure, we combine two Jupyter notebooks to serve as our client applications. One notebook handles our interaction with IPFS and another notebook handles our interaction with Fabric.
 
 We require several prerequisites for these notebooks to work: Node.js and IJavascript have to be installed; the client modules have to be build and installed; and the notebooks and configuration file have to copied from our Git repository's *'src/jupyter/notebook'* directory into the containers. We have automated these steps by modifying the JupyterLab container image.
 
 Both notebooks are available in the *'/home/jovyan/work/local'* directory of each JupyterLab instance. Proceed with the Fabric notebook in the first JupyterLab instance to continue this demo. **NOTE:** Any changes to the notebooks will be *temporarily* preserved (i.e. we are mounting the host's *'./docker/jupyter/jupyter-data/notebook/\<instance\>* directory inside of the container, but we remove this directory when the demo is stopped).
 
-## Optional: Start an external JupyterLab (and an IPFS node client)
+### Optional: Start an external JupyterLab (and an IPFS node client)
 The JupypterLab instances above run on the same server and have direct access to Fabric and IPFS (all containers are part of the same network). We can add another JupyterLab instance that's running on our local system and that connects to organization A.
 
 Set up an SSH tunnel (to access Fabric CA, Fabric Gateway, the IPFS bootstrap node, and the IPFS relay):
@@ -179,11 +182,11 @@ cd jupyter-external
 ./jupyter-docker-ext.sh up
 ```
 
-### Access JupyterLab from your web browser
+#### Access JupyterLab from your web browser
 Note that we are using 127.0.0.2:8889 as to prevent a possible port and session cookie collision when using the SSH tunnel above to access the Jupyterlab instances that are running on the server.
 [http://127.0.0.2:8889](http://127.0.0.2:8889)
 
-## Testing blockchain/channel access
+### Testing blockchain/channel access
 We utilize Fabric's [Access Control Lists (ACLs) and policies](https://hyperledger-fabric.readthedocs.io/en/release-2.4/access_control.html) to limit access from the client SDK to the blockchain/channel. Specifically, we do *not* allow non-admins to subscribe to block events, which allows for full read access to all data/blocks, and thereby bypass our chaincode (which implements its own ACLs). We can verify a user's access level as follows:
 ```
 (From within the 'src' directory.)
@@ -192,7 +195,7 @@ cd ./fabric/acl-policy-test
 ```
 Note that this test application uses the legacy client API and not the newer gateway API. Consequently, we have to use the older wallet identity files (instead of the key-pair files directly). Also note that there is a difference between admin users; i.e. the Fabric CA admin is *not* the same as the MSP's admin identity, and we need the MSP's. E.g. the crypto material of organization A's admin identity can be found in the sub-directories 'keystore' and 'signcerts' of the *'./docker/fabric/fabric-config/crypto-config/peerOrganizations/orga.fabric.localhost/users/orgadmin@orga.fabric.localhost/msp'* directory. A user's crypto material can be obtained via the enrollment process that is mentioned in Fabric's Jupyter notebook.
 
-## Testing
+### Testing
 We can the this prototype's behavior by using the 'Test' notebook. This notebook will use a web server to remote control another JupyterLab instance. If we want to access this web server while it is running on an external JupyterLab client (e.g. VM B), we have to (*reverse*) tunnel the traffic from our local JupyterLab instances (i.e. the server where the Fabric and IPFS clusters are running) to the external JupyterLab instance (note that the '172.20.0.1' IP address can change; use 'ip a|grep docker0' to find the address):
 ```
 (from the external JupyterLab instance's Docker host)
@@ -203,7 +206,7 @@ ssh <user>@<dockerhost> -R 127.0.0.2:4000:172.20.0.1:4000
 ssh <user>@<externalhost> -L 172.20.0.1:4000:127.0.0.2:4000
 ```
 
-## Verify that Docker is running
+### Verify that Docker is running
 ```
 docker --help
 docker info
@@ -213,7 +216,7 @@ docker network ls
 docker network inspect jovian-colab_demo-net
 ```
 
-## Verify that IPFS is running
+### Verify that IPFS is running
 **IPFS node/peer CLI examples:**
 ```
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs --help
@@ -228,7 +231,7 @@ docker exec cluster0.pnet0.orga.ipfs.localhost ipfs-cluster-ctl --help
 docker exec cluster0.pnet0.orga.ipfs.localhost ipfs-cluster-ctl peers ls
 ```
 
-## Verify that Fabric is running
+### Verify that Fabric is running
 **CLI examples:**
 ```
 docker exec cli.orgb.fabric.localhost peer --help
@@ -236,10 +239,10 @@ docker exec cli.orgb.fabric.localhost peer channel list
 ./fabric-docker.sh channel getinfo orgb-chain orgb peer0
 ```
 
-## Monitoring
+### Monitoring
 See the README.md file in the 'monitoring' directory.
 
-## Troubleshooting
+### Troubleshooting
 You can create a Ubuntu-based container to troubleshoot the infrastructure (i.e. to install tools and access all the endpoints from *within* the same virtual network).
 ```
 docker run -it --rm --name troubleshoot --network jovian-colab_demo-net ubuntu:focal bash
@@ -247,7 +250,7 @@ cd ~
 apt update && apt upgrade -y && apt install -y curl less
 ```
 
-## Stop/Cleanup the demo
+### Stop/Cleanup the demo
 (From within the docker directory.)
 ```
 cd ./jupyter
@@ -259,7 +262,7 @@ cd ../ipfs
 docker network rm jovian-colab_demo-net
 ```
 
-## Possibly remove the created Docker volumes
+### Possibly remove the created Docker volumes
 The demo can use up to several GBs of Docker volumes, delete them if needed. **WARNING**: The below command will delete *all* your Docker volumes!
 ```
 docker volume prune

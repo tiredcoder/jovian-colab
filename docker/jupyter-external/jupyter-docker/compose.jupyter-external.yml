@@ -34,7 +34,6 @@ services:
       IPFS_SWARM_KEY: "/key/swarm/psk/1.0.0/\n/base16/\nffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" # Dummy private IPFS network key
       IPFS_MDNS: 'false' # Disable multicast DNS peer discovery (we use the Kademlia DHT instead)
       IPFS_ANNOUNCE_HOST: 'ipfs.jupyter-ext.localhost' # Announce via this hostname (and FQDN and relay)
-      IPFS_CLIENT_RELAYS: "${IPFS_CLIENT_RELAYS}" # Semicolon-separated list of static relays
     extra_hosts: # Provide access to remote services (SSH tunnel)
       - "host.docker.internal:host-gateway"
       - "peer0.pnet0.orga.ipfs.localhost:host-gateway"
