@@ -19,7 +19,7 @@ The infrastructure consists of about 50 Docker containers. See further down belo
  - Software: See tables below.
 
 ## Versions
-The infrastructure consists of the software mentioned in the table below. We use Docker images for most of this software. Your user has to be a member of the 'docker' group. User namespaces / rootless containers and Podman are *not* supported.
+The infrastructure consists of the software mentioned in the table below. We use Docker images for most of this software. Your user has to be a member of the 'docker' group. User namespaces / rootless containers and Podman are *not* supported. Several directories will be (bind) mounted into the containers using your user ID and group ID. This allows for data sharing between the containers and the Docker host.
 
 | Software                                           | Version                                                                   |
 | -------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -88,9 +88,6 @@ The following network sockets are used on the Docker host machine (configured vi
 ![Physical infrastructure overview](infra-physical.svg)
 
 The majority of the infrastructure shares the same virtual (private IPv4) network *'jovian-colab_demo-net'*. No advanced firewalling is configured (all containers have full access to each other). The external JupyterLab instance on VM B is connected to organization A's infrastructure via an SSH tunnel (no advanced clustering, i.e. Docker's 'Swarm Mode', is being used, instead we have combined several Docker Compose projects). The link speeds have been determined via iperf3.
-
-## Possibly change UIDs and GIDs
-Several directories will be mounted into the containers. You can specify your user ID and group ID via the .env files. This allows for data sharing between the containers and the Docker host.
 
 ## Optional: change the secrets in the .env file
 **Generate IPFS cluster secret(s):**

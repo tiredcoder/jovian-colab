@@ -1,7 +1,7 @@
 # Demo Infrastructure - Dev Mode
-Creates a Hyperledger Fabric infrastructure running in *[development mode](https://github.com/hyperledger/fabric/blob/df388228156b882e07795a9041c0dde754f6e745/docs/source/peer-chaincode-devmode.md#running-chaincode-in-development-mode)* for rapid smart contract development. Note that the scripts used within this directory are depending on the '../fabric' directory. We also need to first start the IPFS infrastructure (this creates the needed network).
+Creates a Hyperledger Fabric infrastructure running in *[development mode](https://github.com/hyperledger/fabric/blob/df388228156b882e07795a9041c0dde754f6e745/docs/source/peer-chaincode-devmode.md#running-chaincode-in-development-mode)* for rapid smart contract development. Note that the scripts used within this directory are depending on the '../fabric' directory. We also need to first create the Docker network.
 
-Please see the '.env' file(s) for the configuration (e.g. which software version(s) to use, secret(s), etc.). Do *not* run multiple instances of this demo at the same time.
+The chaincode directory and fabric-config directory will be (bind) mounted into the containers. Please see the '.env' file(s) for the configuration (e.g. which software version(s) to use, secret(s), etc.). Do *not* run multiple instances of this demo at the same time.
 
 **SECURITY WARNING:** Do not expose this infrastructure directly to the Internet! TLS is disabled and the generated crypto material is optional.
 
@@ -9,9 +9,6 @@ Please see the '.env' file(s) for the configuration (e.g. which software version
 ![Infrastructure overview](ccdevmode_infra.svg)
 
 The Fabric infrastructure is connected to the same network as the IPFS and Jupyter infrastructure. The Fabric infrastructure consists of one organization 'SampleOrg'. Within this organization one peer and one orderer node are deployed that have joined a single channel named 'ch1'. The chaincode 'ccdevmode' is deployed on the channel, using its own container via the peer node. A tools container is used to create the channel. We can manage this Fabric development environment using the 'fabric-docker-ccdev.sh' script (see below).
-
-## Possibly change UID and GID
-The chaincode directory and fabric-config directory will be mounted into the containers. You can specify your user ID and group ID via the .env file. This gives the containers the needed write access on the Docker host.
 
 ## Start the infrastructure (first start the IPFS infra)
 ```

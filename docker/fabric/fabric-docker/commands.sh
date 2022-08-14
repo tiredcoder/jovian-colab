@@ -107,7 +107,6 @@ generateCryptoFabricCA() {
     docker exec "$CA_CONTAINER" fabric-ca-client enroll -u "https://$USER:$USER_PW@localhost:7054" --caname "ca.$ORG_DOMAIN" -M "/etc/hyperledger/fabric-ca-client/peers/$USER/tls" --enrollment.profile tls --csr.hosts "$USER" --csr.hosts localhost --tls.certfiles "/etc/hyperledger/fabric-ca-server/ca-cert.pem"
 
     # We need access to the private key from outside the container
-    #docker exec "$CA_CONTAINER" find "/etc/hyperledger/fabric-ca-client/peers/$USER/tls" -type f -perm 0600 -exec chmod 0644 {} +
     docker exec "$CA_CONTAINER" chown -R "$(id -u):$(id -g)" "/etc/hyperledger/fabric-ca-client/peers/$USER/tls"
   }
 
