@@ -53,6 +53,7 @@ class IPFSContract extends Contract {
     if (perms.includes(acl.Users[userIdMsp])) return true; // User is in the ACL and has the specified permission(s)
     if (perms.includes(acl.MSPs[this.clientMSPId])) return true; // User's MSP is in the ACL and has the specified permission(s)
     if (owner.ID === this.clientCertCN && owner.MSPId === this.clientMSPId) return true; // User is the owner
+    if (this.clientCert.subject.includes('OU=admin')) return true; // Make an exception for the admin
     return false; // No access
   }
 
@@ -177,7 +178,8 @@ class IPFSContract extends Contract {
     const access = await this.checkAccess(networkJSON.Owner, networkJSON.ACL, ['rw','w']);
     if (!access) throw new Error(`Access denied. User lacks permission to delete network '${key}'.`);
 
-    return ctx.stub.deleteState(key);
+    const result = await ctx.stub.deleteState(key);
+    return result;
   }
 
   /*
@@ -284,7 +286,8 @@ class IPFSContract extends Contract {
     const access = await this.checkAccess(dataJSON.Owner, dataJSON.ACL, ['rw','w']);
     if (!access) throw new Error(`Access denied. User lacks permission to delete data at '${key}'.`);
 
-    return ctx.stub.deleteState(key);
+    const result = await ctx.stub.deleteState(key);
+    return result;
   }
 
   // Get the history of a data description

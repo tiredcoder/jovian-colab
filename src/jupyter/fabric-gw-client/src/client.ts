@@ -231,7 +231,7 @@ const readNetwork = async (contract: Contract, key: string): Promise<string> => 
 
 const deleteNetwork = async (contract: Contract, key: string): Promise<string> => {
   try {
-    const responseBytes = await contract.evaluateTransaction('deleteNetwork', key);
+    const responseBytes = await contract.submitTransaction('deleteNetwork', key);
     const utf8Decoder = new TextDecoder();
     const responseJson: string = utf8Decoder.decode(responseBytes);
     return responseJson;
@@ -275,7 +275,7 @@ const readData = async (contract: Contract, key: string): Promise<string> => {
 
 const deleteData = async (contract: Contract, key: string): Promise<string> => {
   try {
-    const responseBytes = await contract.evaluateTransaction('deleteData', key);
+    const responseBytes = await contract.submitTransaction('deleteData', key);
     const utf8Decoder = new TextDecoder();
     const responseJson: string = utf8Decoder.decode(responseBytes);
     return responseJson;

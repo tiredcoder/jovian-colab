@@ -240,6 +240,9 @@ Application: &ApplicationDefaults
         Admins:
             Type: ImplicitMeta
             Rule: "MAJORITY Admins"
+        BlockEvents:
+            Type: ImplicitMeta
+            Rule: "ANY Admins"
 
     # Capabilities describes the application level capabilities, see the
     # dedicated Capabilities section elsewhere in this file for a full
@@ -570,6 +573,8 @@ Profiles:
         Consortium: SampleConsortium
         Application:
             <<: *ApplicationDefaults
+            ACLs:
+                event/Block: /Channel/Application/BlockEvents
             Organizations:
                 - <<: *SampleOrg
 
