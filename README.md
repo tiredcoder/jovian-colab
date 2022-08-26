@@ -7,4 +7,7 @@ Using *[JupyterLab](https://jupyter.org)* for decentralized file sharing via *[I
 
 Please refer to the README.md file(s) under the *docker* directory for more information.
 
+Example:  
+![example](example.gif)
+
 Rik Janssen - [SNE/OS3](https://www.os3.nl)

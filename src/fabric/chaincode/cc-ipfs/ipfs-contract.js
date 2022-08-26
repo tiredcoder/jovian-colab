@@ -122,7 +122,10 @@ class IPFSContract extends Contract {
 
       // Only ACL entries and the owner can get network info
       const access = await this.checkAccess(networkJSON.Owner, networkJSON.ACL, ['r','ro','rw']);
-      if (!access) accessError = true;
+      if (!access) {
+        accessError = true;
+        continue;
+      }
 
       // Only the owner can retrieve the ACL info
       if (networkJSON.Owner.ID !== this.clientCertCN || networkJSON.Owner.MSPId !== this.clientMSPId) delete networkJSON['ACL'];
@@ -230,7 +233,10 @@ class IPFSContract extends Contract {
 
       // Only ACL entries and the owner can get data info
       const access = await this.checkAccess(dataJSON.Owner, dataJSON.ACL, ['r','ro','rw']);
-      if (!access) accessError = true;
+      if (!access) {
+        accessError = true;
+        continue;
+      }
 
       // Only the owner can retrieve the ACL info
       if (dataJSON.Owner.ID !== this.clientCertCN || dataJSON.Owner.MSPId !== this.clientMSPId) delete dataJSON['ACL'];
@@ -307,7 +313,10 @@ class IPFSContract extends Contract {
 
         // Only ACL entries and the owner can get data info
         const access = await this.checkAccess(dataJSON.Owner, dataJSON.ACL, ['r','ro','rw']);
-        if (!access) accessError = true;
+        if (!access) {
+          accessError = true;
+          continue;
+        }
 
         // Only the owner can retrieve the ACL info
         if (dataJSON.Owner.ID !== this.clientCertCN || dataJSON.Owner.MSPId !== this.clientMSPId) delete dataJSON['ACL'];

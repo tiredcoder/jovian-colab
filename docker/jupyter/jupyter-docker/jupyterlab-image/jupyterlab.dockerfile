@@ -12,7 +12,6 @@ RUN mamba install --yes make cxx-compiler zeromq nodejs=${NODE_VERSION} \
     && npm install -g ijavascript \
     && ijsinstall \
     && cd /home/jovyan/work \
-    && /opt/conda/bin/python -m pip install *.whl pandas matplotlib ipywidgets \
-    && /opt/conda/bin/jupyter nbextension enable --py widgetsnbextension \
+    && /opt/conda/bin/python -m pip install *.whl pandas matplotlib \
     && npm install -g --only=prod *.tgz \
     && rm *.whl *.tgz

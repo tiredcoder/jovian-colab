@@ -14,7 +14,7 @@ proxyStart() {
   local INSTANCES="$1"
   echo "Starting reverse proxy on $NGINX_HTTP_SOCKET..."
 
-  echo -e "# !!! AUTO-GENERATED FILE BY jupyter-docker.sh !!!\nserver {\n  listen 0.0.0.0:8080;" > "${JUPYTER_NETWORK_ROOT}/jupyter-docker/nginx-proxy.conf"
+  echo -e "# !!! AUTO-GENERATED FILE BY jupyter-docker.sh !!!\nserver {\n  listen 0.0.0.0:8080;\n  client_max_body_size 100M;" > "${JUPYTER_NETWORK_ROOT}/jupyter-docker/nginx-proxy.conf"
   for ((i=1;i<=INSTANCES;i++)); do
     echo -e "  location /notebook.jupyter-$i.localhost {\n    include /etc/nginx/snippets/proxy.conf;\n    proxy_pass http://notebook.jupyter-$i.localhost:8888;\n  }" >> "${JUPYTER_NETWORK_ROOT}/jupyter-docker/nginx-proxy.conf"
   done

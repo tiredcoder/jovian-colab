@@ -18,8 +18,10 @@ echo "File${DELIMITER}SHA256${DELIMITER}Round${DELIMITER}Time_Total_Duration_Wal
 
 # Run the test
 for FILE in "${FILES[@]}"; do
-  ROUND=0
-  while [ $ROUND -lt $ROUNDS ]; do
+  ROUND=1
+  while [ $ROUND -le $ROUNDS ]; do
+    echo "Round $ROUND/$ROUNDS for file '$FILE'...."
+
     # Launch SSH tunnel to netcat server on remote host
     if [ $(ss -lt -H "( sport = :${NC_PORT} )" src "${NC_ADDRESS}" | wc -l) -ne 0 ]; then
       echo "Error: connection on ${NC_ADDRESS}:${NC_PORT} already exists!"
@@ -31,10 +33,12 @@ for FILE in "${FILES[@]}"; do
     # Wait for connection
     sleep 3
     while [ $(ss -lt -H "( sport = :${NC_PORT} )" src "${NC_ADDRESS}" | wc -l) -ne 1 ]; do
+      echo 'Waiting for connection...'
       sleep 1
     done
 
     # Transfer file using netcat (TCP) and measure wall time
+    echo "Transfering file '$FILE' using netcat (TCP)...."
     TRANSFER_WALL_DURATION=$(2>&1 /usr/bin/time --format="\t%e" nc "$NC_ADDRESS" "$NC_PORT" < "$FILE" > /dev/null | cut -f2)
 
     # Verify checksum (has to match)

@@ -12,7 +12,7 @@ Please see the '.env' file(s) for the configuration (e.g. which software version
 The infrastructure consists of three organizations ('A', 'B', and 'C'), two Hyperledger Fabric blockchains/channels (one for the consortium and one for organization B), and two private IPFS networks (again, one for the consortium and one for organization B). The same chaincode/smart contract ('cc-ipfs') is deployed on both channels. The client application(s) consists of a JupyterLab Notebook and an IPFS peer.
 
 ## Requirements
-The infrastructure consists of about 50 Docker containers. See further down below for a visual overview.
+The infrastructure consists of about 60 Docker containers. See further down below for a visual overview.
  - Hardware: Tested on two x86_64 QEMU/KVM Virtual Machines (VMs):
    - VM A: 85 GiB qcow2 virtual disk formatted as ext4 (SSD backend), 10 GiB RAM, 6 core CPU (Intel Xeon E3 1240L v5 backend).
    - VM B: 45 GiB qcow2 virtual disk formatted as ext4 (SSD backend), 4 GiB RAM, 4 core CPU (Intel Xeon E3 1240L v5 backend).
@@ -168,7 +168,7 @@ ssh <user>@<server> -L 172.17.0.1:7054:127.0.0.1:7054 172.17.0.1:7051:127.0.0.1:
 ```
 Note that this SSH tunnel connects to the IP address of the local Docker default bridge (172.17.0.1). This interface is accessible from *within* the containers.
 
-Next, clone this Git repository to your local system and copy the crypto material to the *'docker/jupyter-external/jupyter-data/server-crypto-config'* directory (i.e. copy the server's *'docker/fabric/fabric-config/crypto-config'* directory to your local system's *'server-crypto-config'* directory).
+Next, clone this Git repository to your local system and copy the crypto material to the *'docker/jupyter-external/jupyter-data/server-crypto-config'* directory (i.e. copy the server's *'docker/fabric/fabric-config/crypto-config'* and *'docker/ipfs/crypto-config'* directories to your local system's *'server-crypto-config'* directory).
 
 Now launch JupyterLab and its local IPFS node. Then proceed with the Fabric notebook. **NOTE:** The notebooks are available in the *'/home/jovyan/work/notebooks'* directory and any changes to the notebooks *will* be preserved (i.e. we are mounting the host's *'./src/jupyter/notebook'* directory inside of the container).
 ```
@@ -218,6 +218,9 @@ docker exec peer0.pnet0.orga.ipfs.localhost ipfs id
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs bootstrap list
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs swarm peers
 docker exec peer0.pnet0.orga.ipfs.localhost ipfs ping /p2p/<PEERID>
+docker exec ipfs.jupyter.localhost ipfs dht findpeer <PEERID>
+docker exec ipfs.jupyter.localhost ipfs dht findprovs <CID>
+docker exec ipfs.jupyter.localhost ipfs swarm addrs
 ```
 **IPFS cluster CLI examples:**
 ```

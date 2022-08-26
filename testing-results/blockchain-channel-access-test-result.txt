@@ -1,0 +1,51 @@
+/mnt/app $ ./testPolicy.js --wallet ./wallet --profile /mnt/fabric-profiles/connection-profile-orgc.yaml --user orgCadmin --channel consortium-chain                                                                                           
+ --- Fabric ACL Policy Test Client Application ---                                                                                                                                                                                             
+Existing wallet found at "./wallet".                                                                                                                                                                                                           
+Connected as user 'orgCadmin' and channel 'consortium-chain' selected. Starting to listen for block events...                                                                                                                                  
+----------                                                                                                                                                                                                                                     
+Block: 1 transaction 0                                                                                                                                                                                                                         
+Transaction ID: d2cfe84b627f08daf191aad0bbb753a596562049340a75b7dcd619283f23d3a1                                                                                                                                                               
+Timestamp: Sun, 14 Aug 2022 13:10:24 GMT                                                                                                                                                                                                       
+Inputs: ApproveChaincodeDefinitionForMyOrg consortium-cc-ipfs0.0.1J][Yconsortium-cc-ipfs_0.0.1:2a20f1dba5fd895bca79388d05147f15fecfbfa8b713c37a6b2011b6972d1691                                                                                
+Keys updated:                                                                                                                                                                                                                                  
+Endorsers: MSPorgA                                                                                                                                                                                                                             
+----------                                                                                                                                                                                                                                     
+Block: 2 transaction 0                                                                                                                                                                                                                         
+Transaction ID: 4895a4da903cbe3bb06f416003c8f1522175319567f85e8c79803757548f0fbd                                                                                                                                                               
+Timestamp: Sun, 14 Aug 2022 13:10:41 GMT                                                                                                                                                                                                       
+Inputs: ApproveChaincodeDefinitionForMyOrg consortium-cc-ipfs0.0.1J][Yconsortium-cc-ipfs_0.0.1:2a20f1dba5fd895bca79388d05147f15fecfbfa8b713c37a6b2011b6972d1691                                                                                
+Keys updated:                                                                                                                                                                                                                                  
+Endorsers: MSPorgB 
+[...]
+Block: 9 transaction 0
+Transaction ID: ea59cbfde11f62b3ef5e69a5e09273624aa0d8a0c97a602cf79b663e754d73d1
+Timestamp: Sun, 14 Aug 2022 14:41:49 GMT
+Inputs: IPFSContract:createNetwork pnet0 /dns4/peer0.pnet0.orga.ipfs.localhost/tcp/4001/p2p/12D3KooWCLVuku1xQZLfhwn4UkkR9mFWw1bDeVJ2XVpwzEpvC5JV;/dns4/peer0.pnet0.orgb.ipfs.localhost/tcp/4001/p2p/12D3KooWFJ4XnjSowo6nCTiMPKaNLXrsDakkM5RQiPpZdDSp4uZM;/dns4/peer0.pnet0.orgc.ipfs.localhost/tcp/4001/p2p/12D3KooWNB1Sww8vDHxhg8rtiNc1Ra26ECT3nS7URVbLUkhpZ6fB /key/swarm/psk/1.0.0//base16/63e8d44cb8d738ece5681d42dc918ff882cbe28458d81f64e764f95e3f77929f {"https://cluster0.pnet0.orgc.ipfs.localhost:9097":{"user":"orgc","password":"7342764f480A9feb8abd0F51463160"}} /dns4/relay0.pnet0.orga.ipfs.localhost/tcp/4002/p2p/12D3KooWRsg23DzqhXgt7yfzVf2fs3PPHrRmt6e49p94CgTNcXmh {"Users":{},"MSPs":{"MSPorgC":"r"}} 
+Keys updated: MSPorgC/networks/0/pnet0 
+Endorsers: MSPorgC MSPorgA 
+----------
+Block: 10 transaction 0
+Transaction ID: f9afe9fc9157f5c0fbebd3a1bef80c94298cc99e5252d2d9f6c3dcc7983ff1ce
+Timestamp: Sun, 14 Aug 2022 14:42:00 GMT
+Inputs: IPFSContract:createNetwork pnet0 /dns4/peer0.pnet0.orga.ipfs.localhost/tcp/4001/p2p/12D3KooWCLVuku1xQZLfhwn4UkkR9mFWw1bDeVJ2XVpwzEpvC5JV;/dns4/peer0.pnet0.orgb.ipfs.localhost/tcp/4001/p2p/12D3KooWFJ4XnjSowo6nCTiMPKaNLXrsDakkM5RQiPpZdDSp4uZM;/dns4/peer0.pnet0.orgc.ipfs.localhost/tcp/4001/p2p/12D3KooWNB1Sww8vDHxhg8rtiNc1Ra26ECT3nS7URVbLUkhpZ6fB /key/swarm/psk/1.0.0//base16/63e8d44cb8d738ece5681d42dc918ff882cbe28458d81f64e764f95e3f77929f {"https://cluster0.pnet0.orgb.ipfs.localhost:9097":{"user":"orgb","password":"392449223fA2aAD134f53a8342F814"}} /dns4/relay0.pnet0.orga.ipfs.localhost/tcp/4002/p2p/12D3KooWRsg23DzqhXgt7yfzVf2fs3PPHrRmt6e49p94CgTNcXmh {"Users":{},"MSPs":{"MSPorgB":"r"}} 
+Keys updated: MSPorgB/networks/0/pnet0 
+Endorsers: MSPorgC MSPorgB 
+----------
+Block: 11 transaction 0
+Transaction ID: ece0c32098a5ae0fd4284fdad2385d6df5373848d07709f6eb2965ed634cdc07
+Timestamp: Sun, 14 Aug 2022 20:07:26 GMT
+Inputs: createData testorgc.txt pnet0 QmVSVXixpttHrP7NgXw8ha9WhcbgtZNKieopZ57VeDj5yj ChaCha20 7m+Hoo77kQfF9o/u6dq4SBNKcC3ZFfXci6aZPrg+yuQ= {"Users":{},"MSPs":{"MSPorgC":"r","MSPorgA":"r"}} 
+Keys updated: orgCuser@MSPorgC/0/testorgc.txt 
+Endorsers: MSPorgC MSPorgB 
+
+
+
+/mnt/app $ ./testPolicy.js --wallet ./wallet --profile /mnt/fabric-profiles/connection-profile-orgc.yaml --user orgCuser --channel consortium-chain                        
+ --- Fabric ACL Policy Test Client Application ---                                                                                                                                                                                             
+Existing wallet found at "./wallet".                                                                                                                                                                                                           
+Connected as user 'orgCuser' and channel 'consortium-chain' selected. Starting to listen for block events...                                                                                                                                   
+2022-08-14T21:16:22.839Z - error: [EventService]: on.data [peer0.orgc.fabric.localhost,peer1.orgc.fabric.localhost] - #1- unexpected deliverResponse status received - 403 
+2022-08-14T21:16:22.867Z - error: [EventService]: on.data [peer0.orgc.fabric.localhost,peer1.orgc.fabric.localhost] - #2- unexpected deliverResponse status received - 403 
+2022-08-14T21:16:22.885Z - error: [EventService]: on.data [peer0.orgc.fabric.localhost,peer1.orgc.fabric.localhost] - #3- unexpected deliverResponse status received - 403 
+2022-08-14T21:16:22.899Z - error: [EventService]: on.data [peer1.orgc.fabric.localhost,peer0.orgc.fabric.localhost] - #4- unexpected deliverResponse status received - 403 
+
